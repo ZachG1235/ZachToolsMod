@@ -1,5 +1,6 @@
 from pathlib import Path
 import shutil, os, ctypes
+import constants
 
 drives = []
 
@@ -21,39 +22,24 @@ def GetConnectedDrives():
         drive_info.append((drive, volume_name.value))
 
     return drive_info
-    
-SOURCE_TOOL_PATH = r"\CopyingSources"
-modify_rat_list = True
-RAT_PATHS = [
-    r"\DDRTools\PC\service\app\misc\rat_list.txt",
-    r"\DDRTools\PC\eval\win-x64\rats.txt",
-    r"\DDRTools\PC\eval\win-arm64\rats.txt"
-]
-NEW_RAT_LIST = [
-    "*HopToDesk*\n"
-]
 
-add_serial_script = True
-EXTRAS_PATH = r"\_extras"
+
 
 
 def ModifyRats(drive_letter:str):
-    if not modify_rat_list:
+    if not constants.MODIFY_RAT_LIST:
         print("Modify rat list is disabled.")
-        return
+        return 0
 
-    for each_rat_path in RAT_PATHS:
+    for each_rat_path in constants.RAT_PATHS:
         current_rat_path = Path(drive_letter + ":" + each_rat_path)
 
         if current_rat_path.exists():
-            # with open(current_rat_path, 'a') as rat_list_file:
-            #     rat_list_file.writelines(NEW_RAT_LIST)
-            #     print(f"Successfully updated RAT list at {current_rat_path}")
             with open(current_rat_path, 'r') as rat_list_file:
                 existing_lines = set(rat_list_file.read().splitlines())
 
                 new_lines = [
-                    line for line in NEW_RAT_LIST
+                    line for line in constants.NEW_RAT_LIST
                     if line.rstrip("\n") not in existing_lines
                 ]
 
@@ -61,32 +47,52 @@ def ModifyRats(drive_letter:str):
                     with open(current_rat_path, 'a') as rat_list_file:
                         rat_list_file.writelines(new_lines)
                     print(f"Successfully updated RAT list at {current_rat_path}")
+                    return 1
                 else:
-                    print(f"RAT list already contains the new entries at {current_rat_path}")
+                    print(f"RAT list already contains the new entries.")
+                    return 0
         else:
             print(f"There is no longer a RAT file at {current_rat_path}")
+            return 0
+
+
             
 def AddSerialScript(drive_letter:str):
-    if not add_serial_script:
+    if not constants.ADD_SERIAL_SCRIPT:
         print("Adding serial script is disabled")
+        return 0
 
-    current_extras_path = Path(drive_letter + ":" + EXTRAS_PATH)
+    current_extras_path = Path(drive_letter + ":" + constants.EXTRAS_PATH)
     if current_extras_path.is_dir():
-        source_file = os.getcwd() + "\\" + SOURCE_TOOL_PATH + "\\" + r"ZMOD_Grab-Serial.bat"
-        shutil.copy2(source_file, current_extras_path)
-        print(f"Successfully added Grab Serial script on drive {drive_letter}")
+        source_file = os.getcwd() + "\\" + constants.SOURCE_TOOL_PATH + "\\" + constants.GRAB_SERIALS_SCRIPT_NAME
+        if (current_extras_path / constants.GRAB_SERIALS_SCRIPT_NAME).exists():
+            shutil.copy2(source_file, current_extras_path)
+            print(f"Updated Grab Serial script on drive letter {drive_letter}:")
+        else:
+            shutil.copy2(source_file, current_extras_path)
+            print(f"Successfully added Grab Serial script on drive letter {drive_letter}:")
+        return 1
     else:
-        print(f"There was a problem accessing the extras folder on drive {drive_letter}")
+        print(f"There was a problem accessing the extras folder on drive letter {drive_letter}:")
+        return 0
     
 
 
 def main():
     drive_info = GetConnectedDrives()
-
+    modified_drive = False
     for drive in drive_info:
-        if ("DDRx" in drive[1]):
-            ModifyRats(drive[0])
-            AddSerialScript(drive[0])
+        if constants.DDRTOOLS_DRIVE_NAME_MULTI == drive[1] or constants.DDRTOOLS_DRIVE_NAME_SINGLE == drive[1]:
+            total_modifications = 0
+            modified_drive = True
+            print(f"= Attempting to Modify {drive[1]} on drive letter {drive[0]}: ...")
+            total_modifications += ModifyRats(drive[0])
+            total_modifications += AddSerialScript(drive[0])
+            print(f"= Made {total_modifications} total modifications to {drive[1]}.")
+            print()
+
+    if not modified_drive:
+        print("There were no tool drives detected. Please insert new drives and run this program again.")
 
 
 main()

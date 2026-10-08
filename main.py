@@ -82,14 +82,13 @@ def main():
     drive_info = GetConnectedDrives()
     modified_drive = False
     for drive in drive_info:
-        if constants.DDRTOOLS_DRIVE_NAME_MULTI == drive[1] or constants.DDRTOOLS_DRIVE_NAME_SINGLE == drive[1]:
+        if constants.DDRTOOLS_DRIVE_NAME_MULTI.upper() == drive[1].upper() or constants.DDRTOOLS_DRIVE_NAME_SINGLE.upper() == drive[1].upper():
             total_modifications = 0
             modified_drive = True
-            print(f"= Attempting to Modify {drive[1]} on drive letter {drive[0]}: ...")
+            print(f"=== Attempting to Modify {drive[1]} on drive letter {drive[0]}: ...")
             total_modifications += ModifyRats(drive[0])
             total_modifications += AddSerialScript(drive[0])
-            print(f"= Made {total_modifications} total modifications to {drive[1]}.")
-            print()
+            print(f"= Made {total_modifications} total modifications to {drive[1]}!!!")
 
     if not modified_drive:
         print("There were no tool drives detected. Please insert new drives and run this program again.")

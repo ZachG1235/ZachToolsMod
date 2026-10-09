@@ -5,21 +5,46 @@ import constants
 drives = []
 
 def GetConnectedDrives():
-    drives = []
+    drive_info = []
     bitmask = ctypes.windll.kernel32.GetLogicalDrives()
 
+    DRIVE_REMOVABLE = 2
+    DRIVE_FIXED = 3
+
+
     for i in range(26):
-        if bitmask & (1 << i):
-            letter = chr(65 + i)
-            drives.append(f"{letter}")
+        if not bitmask & (1 << i):
+            continue
+    
+        letter = chr(65 + i)
+        root = f"{letter}:\\"
 
-    drive_info = []
+        drive_type = ctypes.windll.kernel32.GetDriveTypeW(root)
 
-    for drive in drives:
+        if drive_type not in (DRIVE_REMOVABLE, DRIVE_FIXED):
+            continue
+
         volume_name = ctypes.create_unicode_buffer(261)
-        ctypes.windll.kernel32.GetVolumeInformationW(f"{drive}:\\", volume_name, 261, None, None, None, None, 0)
 
-        drive_info.append((drive, volume_name.value))
+        start = time.perf_counter()
+
+        success = ctypes.windll.kernel32.GetVolumeInformationW(root, volume_name, len(volume_name), None, None, None, None, 0)
+
+        elapsed = time.perf_counter() - start
+
+        print(f"{letter}: volume query took {elapsed:.3f}s")
+
+        if success:
+            drive_info.append((letter, volume_name.value))
+
+        # drives.append(f"{letter}")
+
+
+    # for drive in drives:
+    #     volume_name = ctypes.create_unicode_buffer(261)
+    #     ctypes.windll.kernel32.GetVolumeInformationW(f"{drive}:\\", volume_name, 261, None, None, None, None, 0)
+
+    #     drive_info.append((drive, volume_name.value))
 
     return drive_info
 
@@ -92,7 +117,7 @@ def main():
             modified_drive = True
             
             print(f"=== Attempting to Modify {drive[1]} on drive letter {drive[0]}: ...")
-            
+
             total_modifications += ModifyRats(drive[0])
             total_modifications += AddSerialScript(drive[0])
 

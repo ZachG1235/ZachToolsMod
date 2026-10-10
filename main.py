@@ -1,8 +1,11 @@
 from pathlib import Path
 import shutil, os, ctypes, time
 import constants
+import tkinter as tk
 
-drives = []
+root = tk.Tk()
+root.title("Zools GUI")
+root.geometry("400x300")
 
 def GetConnectedDrives():
     drive_info = []
@@ -101,11 +104,40 @@ def AddSerialScript(drive_letter:str):
         return 0
     
 
+def ProduceWindow():
+    top_label = tk.Label(root, text="ZOOLS", font=("Arial", 18))
+    top_label.pack(pady=15)
+
+    AddConfigurationOptions()
+
+    root.mainloop()
+
+def AddConfigurationOptions():
+    paned_window = tk.PanedWindow(root, orient=tk.HORIZONTAL)
+    paned_window.pack(fill=tk.BOTH, expand=True)
+
+    left_pane = tk.Frame(paned_window, width=200, relief=tk.SUNKEN)
+    paned_window.add(left_pane)
+
+    left_label = tk.Label(left_pane, text="Left Sidebar / Menu", font=("Arial", 12))
+    left_label.pack(pady=20, padx=10)
+
+    right_pane = tk.Frame(paned_window, width=400, relief=tk.SUNKEN)
+    paned_window.add(right_pane)
+
+    right_label = tk.Label(right_pane, text="Main Content Window", font=("Arial", 14))
+    right_label.pack(pady=20, padx=10)
+
 
 def main():
     start = time.perf_counter()
 
     drive_info = GetConnectedDrives()
+
+    if constants.DO_GUI:
+        ProduceWindow()
+        return
+
     print(f"Drive detection took: {time.perf_counter() - start:.3f} seconds")
 
     modified_drive = False

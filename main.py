@@ -4,8 +4,6 @@ import constants
 import tkinter as tk
 
 root = tk.Tk()
-root.title("Zools GUI")
-root.geometry("400x300")
 
 def GetConnectedDrives():
     drive_info = []
@@ -13,7 +11,6 @@ def GetConnectedDrives():
 
     DRIVE_REMOVABLE = 2
     DRIVE_FIXED = 3
-
 
     for i in range(26):
         if not bitmask & (1 << i):
@@ -30,9 +27,7 @@ def GetConnectedDrives():
         volume_name = ctypes.create_unicode_buffer(261)
 
         start = time.perf_counter()
-
         success = ctypes.windll.kernel32.GetVolumeInformationW(root, volume_name, len(volume_name), None, None, None, None, 0)
-
         elapsed = time.perf_counter() - start
 
         print(f"{letter}: volume query took {elapsed:.3f}s")
@@ -40,17 +35,14 @@ def GetConnectedDrives():
         if success:
             drive_info.append((letter, volume_name.value))
 
-        # drives.append(f"{letter}")
-
-
-    # for drive in drives:
-    #     volume_name = ctypes.create_unicode_buffer(261)
-    #     ctypes.windll.kernel32.GetVolumeInformationW(f"{drive}:\\", volume_name, 261, None, None, None, None, 0)
-
-    #     drive_info.append((drive, volume_name.value))
-
     return drive_info
 
+def GetToolDrives(connected_drives):
+    tool_drives = []
+    for drive in connected_drives:
+        if constants.DDRTOOLS_DRIVE_NAME_MULTI.upper() == drive[1].upper() or constants.DDRTOOLS_DRIVE_NAME_SINGLE.upper() == drive[1].upper():
+            tool_drives.append(drive)
+    return tool_drives
 
 
 def ModifyRats(drive_letter:str):
@@ -102,17 +94,32 @@ def AddSerialScript(drive_letter:str):
     else:
         print(f"There was a problem accessing the extras folder on drive letter {drive_letter}.")
         return 0
-    
 
-def ProduceWindow():
+def PerformUpdate(drive):
+    operation_start = time.perf_counter()
+    total_modifications = 0
+
+    print(f"=== Attempting to Modify {drive[1]} on drive letter {drive[0]}: ...")
+
+    total_modifications += ModifyRats(drive[0])
+    total_modifications += AddSerialScript(drive[0])
+
+    print(f"Operations took {time.perf_counter() - operation_start:.3f} seconds")
+    print(f"= Made {total_modifications} total modifications to {drive[1]}!!!")
+
+def ProduceWindow(drive_info):
+    root.title("Zools GUI")
+    root.geometry("600x600")
+
     top_label = tk.Label(root, text="ZOOLS", font=("Arial", 18))
     top_label.pack(pady=15)
 
-    AddConfigurationOptions()
+    AddConfigurationOptions(drive_info)
 
     root.mainloop()
 
-def AddConfigurationOptions():
+def AddConfigurationOptions(drive_info):
+    print(drive_info)
     paned_window = tk.PanedWindow(root, orient=tk.HORIZONTAL)
     paned_window.pack(fill=tk.BOTH, expand=True)
 
@@ -121,6 +128,14 @@ def AddConfigurationOptions():
 
     left_label = tk.Label(left_pane, text="Left Sidebar / Menu", font=("Arial", 12))
     left_label.pack(pady=20, padx=10)
+
+    for each_drive in drive_info:
+        lbl = tk.Label(left_pane, text=f"{each_drive[1]} ({each_drive[0]}:)", font=("Arial", 12))
+        lbl.pack(pady=(5, 0), padx=10)
+
+        lbl_subtitle = tk.Label(left_pane, text="Subtitle", font=("Arial", 10))
+        lbl_subtitle.pack(pady=(0, 20), padx=10)
+
 
     right_pane = tk.Frame(paned_window, width=400, relief=tk.SUNKEN)
     paned_window.add(right_pane)
@@ -133,33 +148,18 @@ def main():
     start = time.perf_counter()
 
     drive_info = GetConnectedDrives()
+    print(f"Drive detection took: {time.perf_counter() - start:.3f} seconds")
+    # filter by only tools
+    tool_drives = GetToolDrives(drive_info)
 
     if constants.DO_GUI:
-        ProduceWindow()
+        ProduceWindow(tool_drives)
         return
+    
+    for drive in tool_drives:
+        PerformUpdate(drive)
 
-    print(f"Drive detection took: {time.perf_counter() - start:.3f} seconds")
-
-    modified_drive = False
-    for drive in drive_info:
-        if constants.DDRTOOLS_DRIVE_NAME_MULTI.upper() == drive[1].upper() or constants.DDRTOOLS_DRIVE_NAME_SINGLE.upper() == drive[1].upper():
-            operation_start = time.perf_counter()
-
-            total_modifications = 0
-            modified_drive = True
-            
-            print(f"=== Attempting to Modify {drive[1]} on drive letter {drive[0]}: ...")
-
-            total_modifications += ModifyRats(drive[0])
-            total_modifications += AddSerialScript(drive[0])
-
-            print(
-                f"Operations took "
-                f"{time.perf_counter() - operation_start:.3f} seconds"
-            )
-            print(f"= Made {total_modifications} total modifications to {drive[1]}!!!")
-
-    if not modified_drive:
+    if len(tool_drives) < 1:
         print("There were no tool drives detected. Please insert new drives and run this program again.")
 
 

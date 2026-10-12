@@ -11,6 +11,7 @@ import constants
 root = tk.Tk()
 global_drive_info = []
 drive_enablement = dict({})
+currently_updating = False
 
 def GetConnectedDrives():
     drive_info = []
@@ -120,11 +121,11 @@ def SetGlobalDrives(drive):
 
 def ProduceWindow():
     root.title("Zools GUI")
-    root.geometry("800x700")
-    root.configure(bg="#7f8385") 
+    root.geometry("1200x700")
+    root.configure(bg="#d99b9b") 
 
 
-    top_label = tk.Label(root, text="ZOOLS", font=("Arial", 18))
+    top_label = tk.Label(root, text="ZOOLS", font=("Sitka Text", 30), bg="#d99b9b")
     top_label.pack(pady=15)
 
     AddConfigurationOptions()
@@ -138,50 +139,167 @@ def AddConfigurationOptions():
     left_pane = tk.Frame(paned_window, width=200, relief=tk.SUNKEN, bg="#ffc5c5")
     paned_window.add(left_pane)
 
-    left_label = tk.Label(left_pane, text="Connected Drives", font=("Arial", 12))
-    left_label.grid(row=0, column=0, pady=20, padx=10, columnspan=2)
+    left_label = tk.Label(left_pane, text="Connected Drives", font=("Sitka Heading Semibold", 20, "bold", "underline"), bg="#ffc5c5")
+    left_label.pack(pady=20, padx=10)
+
+    # drive frame
+    drive_list_frame = tk.Frame(left_pane, bg="#ffc5c5")
+    drive_list_frame.pack(fill=tk.BOTH, expand=True)
+
+    
 
     global drive_enablement
-    drive_enablement = {}
-    i = 0
-    for each_drive in global_drive_info:
-        lbl = tk.Label(left_pane, text=f"{each_drive[1]} ({each_drive[0]}:)", font=("Arial", 12))
-        lbl.grid(row=1+i, column=0, pady=(5, 0), padx=10)
+    RefreshDriveList(drive_list_frame)
+    # i = 0
+    # for each_drive in global_drive_info:
+    #     lbl = tk.Label(drive_list_frame, text=f"{each_drive[1]} ({each_drive[0]}:)", font=("Arial", 12))
+    #     lbl.grid(row=1+i, column=0, pady=(5, 0), padx=10)
 
-        # get updated time
-        last_date_modified = GetLastModifiedDateFromDrive(each_drive[0])
-        if constants.DBG_DISPLAY_TIMESTAMP_AS_NOW:
-            last_date_modified = datetime.now(timezone(timedelta(hours=-7)))
+    #     # get updated time
+    #     if constants.DBG_DISPLAY_TIMESTAMP_AS_NOW:
+    #         last_date_updated = datetime.now(timezone(timedelta(hours=-7)))
+    #         last_date_zodded = datetime.now(timezone(timedelta(hours=-7)))
+    #     else:
+    #         last_date_updated = GetLastDateUpdatedFromDrive(each_drive[0])
+    #         last_date_zodded = GetLastDateZoddedFromDrive(each_drive[0])
 
-        if last_date_modified == None:
-            last_date_modified = "Not Modified"
-        else:
-            # "Wed, Oct 3rd 2026 (12:45pm)"
-            first_part = last_date_modified.strftime("%a, %b %#d")
-            last_part = last_date_modified.strftime(" %Y (%#I:%M %p)").lower()
-            last_date_modified = f"{first_part}{GetOrdinalSuffix(int(last_date_modified.strftime("%#d")))}{last_part}"
+    #     if last_date_zodded == None:
+    #         last_date_zodded = "Not Modified"
+    #     else:
+    #         # "Wed, Oct 3rd 2026 (12:45pm)"
+    #         last_date_zodded = datetime.fromisoformat(last_date_zodded)
+    #         first_part = last_date_zodded.strftime("%a, %b %#d")
+    #         last_part = last_date_zodded.strftime(" %Y (%#I:%M %p)").lower()
+    #         last_date_zodded = f"{first_part}{GetOrdinalSuffix(int(last_date_zodded.strftime("%#d")))}{last_part}"
 
-        lbl_subtitle = tk.Label(left_pane, text=last_date_modified, font=("Arial", 10))
-        lbl_subtitle.grid(row=2+i, column=0, pady=(0, 20), padx=10)
+    #     if last_date_updated == None:
+    #         last_date_updated = "Not Updated"
+    #     else:
+    #         # Wed, Oct 3rd, 2026
+    #         last_date_updated = datetime.strptime(last_date_updated, "%Y%m%d")
+    #         last_date_updated_no_ordinal = last_date_updated.strftime("%a, %b %#d")
+    #         last_date_updated = f"{last_date_updated_no_ordinal}{GetOrdinalSuffix(int(last_date_updated.strftime("%#d")))}{last_date_updated.strftime(" %Y")}"
 
-        drive_enablement[each_drive[0]] = tk.BooleanVar(value=True)
-        checkbox = tk.Checkbutton(left_pane, variable=drive_enablement[each_drive[0]], anchor="center", command=lambda drive_letter=each_drive[0]: CheckButtonModified(drive_letter))
-        checkbox.grid(row=1+i, column=1, rowspan=2, padx=5)
-        i += 2
 
+    #     lbl_subtitle = tk.Label(drive_list_frame, text=f"Last Updated: {last_date_updated}", font=("Arial", 10))
+    #     lbl_subtitle.grid(row=2+i, column=0, padx=10, sticky="w")
+
+    #     lbl_subsubtitle = tk.Label(drive_list_frame, text=f"Last Zodded: {last_date_zodded}", font=("Arial", 10))
+    #     lbl_subsubtitle.grid(row=3+i, column=0, pady=(0, 20), padx=10, sticky="w")
+
+    #     drive_enablement[each_drive[0]] = tk.BooleanVar(value=True)
+    #     checkbox = tk.Checkbutton(drive_list_frame, variable=drive_enablement[each_drive[0]], anchor="center", command=lambda drive_letter=each_drive[0]: CheckButtonModified(drive_letter))
+    #     checkbox.grid(row=1+i, column=1, rowspan=3, padx=5)
+    #     i += 3
+
+    bottom_frame = tk.Frame(left_pane, bg="#d99b9b", height=100)
+    bottom_frame.pack(side=tk.BOTTOM, fill=tk.X)
+    bottom_frame.pack_propagate(False)
+
+    refresh_button = tk.Button(bottom_frame, text="Refresh", command=lambda: RefreshDriveList(drive_list_frame, detect_drives=True, run_function_again=False), font=("Arial", 20))
+    refresh_button.grid(row=0, column=0, sticky="ew", padx=5, pady=10)
+
+    update_button = tk.Button(bottom_frame, text="Update", command=PerformUpdateFromGUI, font=("Arial", 20))
+    update_button.grid(row=0, column=1, sticky="ew", padx=5, pady=10)
+
+    bottom_frame.columnconfigure((0, 1), weight=1)
 
     right_pane = tk.Frame(paned_window, width=400, relief=tk.SUNKEN)
     paned_window.add(right_pane)
 
-    right_label = tk.Label(right_pane, text="Main Content Window", font=("Arial", 14))
+    right_label = tk.Label(right_pane, text="Main Content Window", font=("Sitka Heading Semibold", 20))
     right_label.pack(pady=20, padx=10)
 
 def CheckButtonModified(id):
     global drive_enablement
     print(f"Drive {id} is now {drive_enablement[id].get()}")
 
-def GetLastModifiedDateFromDrive(letter):
-    zools_data_path = Path(letter + ":\\" + constants.ZOOLS_DATA_FILE)
+def PerformUpdateFromGUI():
+    global global_drive_info, currently_updating
+    currently_updating = True
+    for each_drive in global_drive_info:
+        if each_drive[0] in drive_enablement.keys():
+            if drive_enablement[each_drive[0]].get():
+                PerformUpdate(each_drive)
+                SetLastModifiedDateOnDrive(each_drive[0], str(datetime.now(timezone(timedelta(hours=-7)))))
+    currently_updating = False
+
+
+def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=True):
+    global global_drive_info, drive_enablement, currently_updating
+
+    if currently_updating:
+        if run_function_again:
+            root.after(2_000, lambda: RefreshDriveList(drive_list_frame, detect_drives=True))
+        return
+
+    if detect_drives:
+        if constants.DBG_USE_DUMMY_DRIVES:
+            global_drive_info = GenerateDummyDriveList()
+        else:
+            global_drive_info = GetToolDrives(GetConnectedDrives())
+
+    current_drives = {drive[0] for drive in global_drive_info}
+
+    for letter in list(drive_enablement.keys()):
+        if letter not in current_drives:
+            del drive_enablement[letter]
+
+    for widget in drive_list_frame.winfo_children():
+        widget.destroy()
+
+    for i, each_drive in enumerate(global_drive_info):
+        letter = each_drive[0]
+        row = i * 3
+
+        if letter not in drive_enablement:
+            drive_enablement[letter] = tk.BooleanVar(master=root, value=True)
+
+        lbl = tk.Label(drive_list_frame, text=f"{each_drive[1]} ({letter}:)", font=("Cascadia Code", 12, "bold"), bg="#ffc5c5")
+        lbl.grid(row=row, column=0, pady=(5, 0), padx=10)
+
+        if constants.DBG_DISPLAY_TIMESTAMP_AS_NOW:
+            last_date_updated = datetime.now(timezone(timedelta(hours=-7)))
+            last_date_zodded = datetime.now(timezone(timedelta(hours=-7)))
+        else:
+            last_date_updated = GetLastDateUpdatedFromDrive(letter)
+            last_date_zodded = GetLastDateZoddedFromDrive(letter)
+
+        if last_date_zodded is None:
+            last_date_zodded = "Not Modified"
+        else:
+            last_date_zodded = datetime.fromisoformat(last_date_zodded)
+            first_part = last_date_zodded.strftime("%a, %b %#d")
+            last_part = last_date_zodded.strftime(" %Y (%#I:%M %p)").lower()
+            day = int(last_date_zodded.strftime("%#d"))
+            last_date_zodded = f"{first_part}{GetOrdinalSuffix(day)}{last_part}"
+
+        if last_date_updated is None:
+            last_date_updated = "Not Updated"
+        else:
+            last_date_updated = datetime.strptime(last_date_updated, "%Y%m%d")
+            date_part = last_date_updated.strftime("%a, %b %#d")
+            day = int(last_date_updated.strftime("%#d"))
+            last_date_updated = (f"{date_part}{GetOrdinalSuffix(day)}{last_date_updated.strftime(' %Y')}")
+
+            updated_subtitle = tk.Label(drive_list_frame, text=f"Last Updated: {last_date_updated}", font=("Cascadia Code", 10), bg="#ffc5c5")
+            updated_subtitle.grid(row=row + 1, column=0, padx=10, sticky="w")
+
+            zodded_subtitle = tk.Label(drive_list_frame, text=f"Last Zodded: {last_date_zodded}", font=("Cascadia Code", 10), bg="#ffc5c5")
+            zodded_subtitle.grid(row=row + 2, column=0, pady=(0, 20), padx=10, sticky="w")
+
+            checkbox = tk.Checkbutton(drive_list_frame, variable=drive_enablement[letter], anchor="center", command=lambda d=letter: CheckButtonModified(d))
+            checkbox.grid(row=row, column=1, rowspan=3, padx=5)
+    if run_function_again:
+        root.after(5_000, lambda: RefreshDriveList(drive_list_frame, detect_drives=True))
+        
+
+# # # # # # # # # # # # # # # # # # # # 
+#     Date Reading/Writing Utilities  #
+# # # # # # # # # # # # # # # # # # # # 
+
+def GetLastDateZoddedFromDrive(letter):
+    zools_data_path = Path(letter + ":\\" + constants.DATE_MODIFIED_PATH + "\\" + constants.ZOOLS_DATA_FILE)
     data = {}
     if zools_data_path.is_file():
         with open(zools_data_path, 'r', encoding='utf-8') as file_raw:
@@ -190,8 +308,17 @@ def GetLastModifiedDateFromDrive(letter):
             return data[constants.ZKEY_LAST_DATE_UPDATED]
     return None
 
+def GetLastDateUpdatedFromDrive(letter):
+    timestamp_updated_path = Path(letter + ":\\" + constants.DATE_MODIFIED_PATH + "\\" + constants.DDRTOOLS_DATE_MODIFIED_TIMESTAMP_FILE)
+    data = {}
+    if timestamp_updated_path.is_file():
+        with open(timestamp_updated_path, 'r', encoding='utf-8') as file_raw:
+            data = file_raw.readline().strip()
+        return data
+    return None
+
 def SetLastModifiedDateOnDrive(letter, time_to_set):
-    zools_data_path = Path(letter + ":\\" + constants.ZOOLS_DATA_FILE)
+    zools_data_path = Path(letter + ":\\" + constants.DATE_MODIFIED_PATH + "\\" + constants.ZOOLS_DATA_FILE)
     data = {}
     if zools_data_path.is_file():
         with open(zools_data_path, 'r', encoding='utf-8') as file_raw:
@@ -204,8 +331,8 @@ def WriteToZoolsDataFile(pathToWriteTo, dataToWrite):
         json.dump(dataToWrite, filePointer, indent=4, sort_keys=True)
 
     # Make file hidden on Windows system (this totally breaks on anything else lol)
-    FILE_ATTRIBUTE_HIDDEN = 0x02
-    success = ctypes.windll.kernel32.SetFileAttributesW(str(pathToWriteTo), FILE_ATTRIBUTE_HIDDEN)
+    # FILE_ATTRIBUTE_HIDDEN = 0x02
+    # success = ctypes.windll.kernel32.SetFileAttributesW(str(pathToWriteTo), FILE_ATTRIBUTE_HIDDEN)
 
 def GetOrdinalSuffix(day):
     if day >= 11 and day <= 13:
@@ -220,6 +347,11 @@ def GetOrdinalSuffix(day):
         return "rd"
     else:
         return "th"
+
+
+# # # # # # # # # # # # # # # # # # # # 
+#        Misc/Debug Functions         #
+# # # # # # # # # # # # # # # # # # # # 
 
 def GenerateDummyDriveList():
     # tool drive cant be C so add it to the pool of unavailable drive letters

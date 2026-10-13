@@ -124,9 +124,14 @@ def ProduceWindow():
     root.geometry("1200x700")
     root.configure(bg="#d99b9b") 
 
+    top_frame = tk.Frame(root, bg="#d99b9b")
+    top_frame.pack(fill=tk.X)
 
-    top_label = tk.Label(root, text="ZOOLS", font=("Sitka Text", 30), bg="#d99b9b")
-    top_label.pack(pady=15)
+    top_label = tk.Label(top_frame, text="ZOOLS", font=("Sitka Text", 30), bg="#d99b9b")
+    top_label.pack(side=tk.TOP, pady=(15, 0))
+
+    version_label = tk.Label(top_frame, text=f"Version {constants.CURRENT_VERSION}", font=("Sitka Text", 14), bg="#d99b9b")
+    version_label.pack(side=tk.BOTTOM, anchor=tk.SE, padx=5, pady=3)
 
     AddConfigurationOptions()
 
@@ -204,11 +209,40 @@ def AddConfigurationOptions():
 
     bottom_frame.columnconfigure((0, 1), weight=1)
 
+    # Main Text Section
+
     right_pane = tk.Frame(paned_window, width=400, relief=tk.SUNKEN)
     paned_window.add(right_pane)
 
-    right_label = tk.Label(right_pane, text="Main Content Window", font=("Sitka Heading Semibold", 20))
+    right_label = tk.Label(right_pane, text="Welcome to Zools!", font=("Sitka Heading Semibold", 20))
     right_label.pack(pady=20, padx=10)
+
+    text_frame = tk.Frame(right_pane)
+    text_frame.pack(fill="both", expand=True, padx=10, pady=(10, 80))
+
+    scrollbar = tk.Scrollbar(text_frame)
+    scrollbar.pack(side="right", fill="y")
+
+    text_box = tk.Text(text_frame, wrap="word", yscrollcommand=scrollbar.set, font=("Sitka Text", 11), padx=10, pady=10)
+    text_box.pack(side="left", fill="both", expand=True)
+
+    scrollbar.config(command=text_box.yview)
+
+    large_text = GetCurrentBlogContent()
+
+    text_box.insert("1.0", large_text)
+
+    text_box.config(state="disabled")
+
+def GetCurrentBlogContent():
+    blog_file_path = os.getcwd() + "\\" + constants.BLOG_FILE_NAME
+    with open(blog_file_path, 'r') as blog_raw:
+        data = json.load(blog_raw)
+    if constants.CURRENT_VERSION in data:
+        return data[constants.CURRENT_VERSION]
+    return f"No blog post found for Version {constants.CURRENT_VERSION}."
+    
+
 
 def CheckButtonModified(id):
     global drive_enablement

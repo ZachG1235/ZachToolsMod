@@ -30,7 +30,7 @@ DO_GUI = True
 
 # KEYS
 ZKEY_LAST_DATE_UPDATED = "last_date_updated"
-CURRENT_VERSION = "0.1.0"
+CURRENT_VERSION = "0.1.1"
 
 
 

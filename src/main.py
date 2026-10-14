@@ -367,6 +367,11 @@ def CheckButtonModified(id):
     global drive_enablement
     print(f"Drive {id} is now {drive_enablement[id].get()}")
 
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+#     Blog Reading Utilities  
+# # # # # # # # # # # # # # # # # # # # 
+
 def GetCurrentBlogContent():
     # what i want here, is that if the last blog content was, let's say, 0.1.0, and it's currently version 0.1.1, i want it to display 0.1.0's content if there is no content for 0.1.1. 
     # however, if there's more recent content, like 0.2.0, i don't want it to display that if the current version is 0.1.1. 

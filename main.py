@@ -219,13 +219,13 @@ def AddConfigurationOptions():
     bottom_frame.pack(side=tk.BOTTOM, fill=tk.X)
     bottom_frame.pack_propagate(False)
 
-    refresh_button = tk.Button(bottom_frame, text="Refresh", command=lambda: RefreshDriveList(drive_list_frame, detect_drives=True, run_function_again=False), font=("Arial", 20))
+    refresh_button = tk.Button(bottom_frame, text="Refresh", command=lambda: RefreshDriveList(drive_list_frame, detect_drives=True, run_function_again=False), font=("Sitka Heading Semibold", 20))
     refresh_button.grid(row=0, column=0, sticky="ew", padx=5, pady=10)
 
-    remove_button = tk.Button(bottom_frame, text="Uninstall", command=RemoveUpdateGUI, font=("Arial", 20))
+    remove_button = tk.Button(bottom_frame, text="Uninstall", command=RemoveUpdateGUI, font=("Sitka Heading Semibold", 20), bg="#FD6E6E")
     remove_button.grid(row=0, column=1, sticky="ew", padx=5, pady=10)
 
-    update_button = tk.Button(bottom_frame, text="Zodify", command=PerformUpdateGUI, font=("Arial", 20))
+    update_button = tk.Button(bottom_frame, text="ZODIFY", command=PerformUpdateGUI, font=("Sitka Heading Semibold", 20), bg="#71EB61")
     update_button.grid(row=0, column=2, sticky="ew", padx=5, pady=10)
 
     bottom_frame.columnconfigure((0, 1, 2), weight=1)
@@ -240,13 +240,13 @@ def AddConfigurationOptions():
     blog_nav_frame.pack(side=tk.BOTTOM, pady=(0, 10))
 
     global current_blog_version
-    previous_blog_button = tk.Button(blog_nav_frame, text="<-- Previous Version", command=lambda d=current_blog_version: SetBlog(GetPreviousBlog(d)), padx=10, pady=10)
+    previous_blog_button = tk.Button(blog_nav_frame, text="<-- Previous Version", command=lambda d=current_blog_version: SetBlog(GetPreviousBlog(d)), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg="#FFB0B0")
     previous_blog_button.pack(side=tk.LEFT, padx=5)
 
-    current_blog_button = tk.Button(blog_nav_frame, text="Current Version", command=lambda: SetBlog(GetCurrentBlogContent()), padx=10, pady=10)
+    current_blog_button = tk.Button(blog_nav_frame, text="Current Version", command=lambda: SetBlog(GetCurrentBlogContent()), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg="#FFB0B0")
     current_blog_button.pack(side=tk.LEFT, padx=5)
 
-    next_blog_button = tk.Button(blog_nav_frame, text="Next Version -->", command=lambda d=current_blog_version: SetBlog(GetNextBlog(d)), padx=10, pady=10)
+    next_blog_button = tk.Button(blog_nav_frame, text="Next Version -->", command=lambda d=current_blog_version: SetBlog(GetNextBlog(d)), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg="#FFB0B0")
     next_blog_button.pack(side=tk.LEFT, padx=5)
 
 

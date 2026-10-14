@@ -256,7 +256,7 @@ def AddConfigurationOptions():
     text_box.pack(side="left", fill="both", expand=True)
     scrollbar.config(command=text_box.yview)
 
-    large_text = GetCurrentBlogContent()
+    large_text = GetClosestBlog(constants.CURRENT_VERSION)
     text_box.insert("1.0", large_text)
     text_box.config(state="disabled")
 
@@ -379,12 +379,31 @@ def GetBlogContent(version):
         return data[version]
     return f"No blog post found for Version {version}."
 
+def GetClosestBlog(version):
+    data = GetAllBlogData()
+    versions = list(data.keys())
+    sorted_versions = sorted(versions, key=ComparableSemVer)
+    for i in range(len(sorted_versions)-1, -1, -1):
+        if ComparableSemVer(version) >= ComparableSemVer(sorted_versions[i]):
+            return data[sorted_versions[i]]
+    return f"Version '{version}' either doesn't have a previous version or there is a parsing error."
+
+def GetClosestVersion(version):
+    data = GetAllBlogData()
+    versions = list(data.keys())
+    sorted_versions = sorted(versions, key=ComparableSemVer)
+    for i in range(len(sorted_versions)-1, -1, -1):
+        if ComparableSemVer(version) >= ComparableSemVer(sorted_versions[i]):
+            return sorted_versions[i]
+    return f"Version '{version}' either doesn't have a previous version or there is a parsing error."
+
 def GetNextBlog(version):
     data = GetAllBlogData()
     versions = list(data.keys())
     sorted_versions = sorted(versions, key=ComparableSemVer)
+
     if not version in versions:
-        return f"Error in version number index for Version '{version}'."
+        version = GetClosestVersion(version)
     if (sorted_versions.index(version) + 1) >= len(sorted_versions):
         # cant go any higher
         return data[version]
@@ -396,7 +415,7 @@ def GetPreviousBlog(version):
     versions = list(data.keys())
     sorted_versions = sorted(versions, key=ComparableSemVer)
     if not version in versions:
-        return f"Error in version number index for Version '{version}'."
+        version = GetClosestVersion(version)
     if (sorted_versions.index(version) - 1) < 0:
         # cant go any lower
         return data[version]

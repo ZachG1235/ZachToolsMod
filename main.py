@@ -14,10 +14,16 @@ root = tk.Tk()
 paned_window = tk.PanedWindow(root, orient=tk.HORIZONTAL)
 left_pane = tk.Frame(paned_window, width=200, relief=tk.SUNKEN, bg="#ffc5c5")
 drive_list_frame = tk.Frame(left_pane, bg="#ffc5c5")
+right_pane = tk.Frame(paned_window, width=400, relief=tk.SUNKEN)
+
+text_frame = tk.Frame(right_pane)
+scrollbar = tk.Scrollbar(text_frame)
+text_box = tk.Text(text_frame, wrap="word", yscrollcommand=scrollbar.set, font=("Sitka Text", 11), padx=10, pady=10)
 
 global_drive_info = []
 drive_enablement = dict({})
 currently_updating = False
+current_blog_version = constants.CURRENT_VERSION
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
@@ -225,7 +231,6 @@ def AddConfigurationOptions():
     bottom_frame.columnconfigure((0, 1, 2), weight=1)
 
     # Main Text Section
-    right_pane = tk.Frame(paned_window, width=400, relief=tk.SUNKEN)
     paned_window.add(right_pane)
 
     right_label = tk.Label(right_pane, text="Welcome to Zools!", font=("Sitka Heading Semibold", 20))
@@ -234,20 +239,20 @@ def AddConfigurationOptions():
     blog_nav_frame = tk.Frame(right_pane)
     blog_nav_frame.pack(side=tk.BOTTOM, pady=(0, 10))
 
-    previous_blog_button = tk.Button(blog_nav_frame, text="prev", padx=10, pady=10)
+    global current_blog_version
+    previous_blog_button = tk.Button(blog_nav_frame, text="<-- Previous Version", command=lambda d=current_blog_version: SetBlog(GetPreviousBlog(d)), padx=10, pady=10)
     previous_blog_button.pack(side=tk.LEFT, padx=5)
-    current_blog_button = tk.Button(blog_nav_frame, text="current", padx=10, pady=10)
+
+    current_blog_button = tk.Button(blog_nav_frame, text="Current Version", command=lambda: SetBlog(GetCurrentBlogContent()), padx=10, pady=10)
     current_blog_button.pack(side=tk.LEFT, padx=5)
-    next_blog_button = tk.Button(blog_nav_frame, text="next", padx=10, pady=10)
+
+    next_blog_button = tk.Button(blog_nav_frame, text="Next Version -->", command=lambda d=current_blog_version: SetBlog(GetNextBlog(d)), padx=10, pady=10)
     next_blog_button.pack(side=tk.LEFT, padx=5)
 
 
-    text_frame = tk.Frame(right_pane)
     text_frame.pack(fill="both", expand=True, padx=10, pady=(10, 10))
 
-    scrollbar = tk.Scrollbar(text_frame)
     scrollbar.pack(side="right", fill="y")
-    text_box = tk.Text(text_frame, wrap="word", yscrollcommand=scrollbar.set, font=("Sitka Text", 11), padx=10, pady=10)
     text_box.pack(side="left", fill="both", expand=True)
     scrollbar.config(command=text_box.yview)
 
@@ -375,16 +380,34 @@ def GetBlogContent(version):
     return f"No blog post found for Version {version}."
 
 def GetNextBlog(version):
-    # TODO: will fail when version doesn't exisst
     data = GetAllBlogData()
     versions = list(data.keys())
     sorted_versions = sorted(versions, key=ComparableSemVer)
+    if not version in versions:
+        return f"Error in version number index for Version '{version}'."
     if (sorted_versions.index(version) + 1) >= len(sorted_versions):
         # cant go any higher
         return data[version]
     else:
         return data[sorted_versions[sorted_versions.index(version) + 1]]
 
+def GetPreviousBlog(version):
+    data = GetAllBlogData()
+    versions = list(data.keys())
+    sorted_versions = sorted(versions, key=ComparableSemVer)
+    if not version in versions:
+        return f"Error in version number index for Version '{version}'."
+    if (sorted_versions.index(version) - 1) < 0:
+        # cant go any lower
+        return data[version]
+    else:
+        return data[sorted_versions[sorted_versions.index(version) - 1]]
+
+def SetBlog(text_to_set):
+    text_box.config(state="normal")
+    text_box.delete("1.0", tk.END)
+    text_box.insert("1.0", text_to_set)
+    text_box.config(state="disabled") 
 
 def GetAllBlogData():
     blog_file_path = os.getcwd() + "\\" + constants.BLOG_FILE_NAME

@@ -36,9 +36,13 @@ def ModifyRats(drive_letter:str):
         return 0
 
     rat_modification_count = 0
-    for each_rat_path in constants.RAT_PATHS:
-        current_rat_path = Path(drive_letter + ":" + each_rat_path)
+    for i in range(0, len(constants.RAT_PATHS)):
+        current_rat_path = Path(drive_letter + ":" + constants.RAT_PATHS[i])
 
+        if not constants.MODIFY_RAT_PATH[i]:
+            print(f"Override: Don't add to RAT file at path '{current_rat_path}'")
+            continue
+        
         if current_rat_path.exists():
             with open(current_rat_path, 'r') as rat_list_file:
                 existing_lines = set(rat_list_file.read().splitlines())
@@ -62,11 +66,16 @@ def ModifyRats(drive_letter:str):
 def RevertRats(drive_letter:str):
     rat_revert_count = 0
     lines_to_remove = {line.rstrip("\r\n") for line in constants.NEW_RAT_LIST}
-    for each_rat_path in constants.RAT_PATHS:
-        current_rat_path = Path(drive_letter + ":" + each_rat_path)
+    for i in range(0, len(constants.RAT_PATHS)):
+        current_rat_path = Path(drive_letter + ":" + constants.RAT_PATHS[i])
+
+        if not constants.MODIFY_RAT_PATH[i]:
+            print(f"Override: Don't remove from RAT file at path '{current_rat_path}'")
+            continue
 
         if not current_rat_path.exists():
             print(f"There is no longer a rat file at {current_rat_path}")
+            continue
         
         with open(current_rat_path, 'r', newline="") as rat_list_file:
             existing_lines = rat_list_file.readlines()
@@ -132,7 +141,7 @@ def RemoveUpdates(drive):
     total_modifications += RemoveSerialScript(drive[0])
 
     print(f"Operations took {time.perf_counter() - operation_start:.3f} seconds")
-    print(f"= Removed {total_modifications} total updates to {drive[1]}.")
+    print(f"= Removed {total_modifications} total updates to {drive[1]} on {drive[0]}.")
 
 
 def PerformUpdate(drive):
@@ -239,14 +248,13 @@ def AddConfigurationOptions():
     blog_nav_frame = tk.Frame(right_pane)
     blog_nav_frame.pack(side=tk.BOTTOM, pady=(0, 10))
 
-    global current_blog_version
-    previous_blog_button = tk.Button(blog_nav_frame, text="<-- Previous Version", command=lambda d=current_blog_version: SetBlog(GetPreviousBlog(d)), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg="#FFB0B0")
+    previous_blog_button = tk.Button(blog_nav_frame, text="<-- Previous Version", command=lambda: SetBlog(GetPreviousBlog()), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg="#FFB0B0")
     previous_blog_button.pack(side=tk.LEFT, padx=5)
 
     current_blog_button = tk.Button(blog_nav_frame, text="Current Version", command=lambda: SetBlog(GetCurrentBlogContent()), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg="#FFB0B0")
     current_blog_button.pack(side=tk.LEFT, padx=5)
 
-    next_blog_button = tk.Button(blog_nav_frame, text="Next Version -->", command=lambda d=current_blog_version: SetBlog(GetNextBlog(d)), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg="#FFB0B0")
+    next_blog_button = tk.Button(blog_nav_frame, text="Next Version -->", command=lambda: SetBlog(GetNextBlog()), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg="#FFB0B0")
     next_blog_button.pack(side=tk.LEFT, padx=5)
 
 
@@ -302,10 +310,14 @@ def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=T
             last_date_updated = GetLastDateUpdatedFromDrive(letter)
             last_date_zodded = GetLastDateZoddedFromDrive(letter)
 
+        last_date_updated_timestamp = last_date_updated
+        last_date_zodded_timestamp = last_date_zodded
+
         if last_date_zodded is None:
             last_date_zodded = "Not Modified"
         else:
             last_date_zodded = datetime.fromisoformat(last_date_zodded)
+            last_date_zodded_timestamp = last_date_zodded
             first_part = last_date_zodded.strftime("%a, %b %#d")
             last_part = last_date_zodded.strftime(" %Y (%#I:%M %p)").lower()
             day = int(last_date_zodded.strftime("%#d"))
@@ -314,15 +326,29 @@ def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=T
         if last_date_updated is None:
             last_date_updated = "Not Updated"
         else:
-            last_date_updated = datetime.strptime(last_date_updated, "%Y%m%d")
+            last_date_updated = datetime.strptime(last_date_updated, "%Y-%m-%d")
+            last_date_updated_timestamp = last_date_updated
             date_part = last_date_updated.strftime("%a, %b %#d")
             day = int(last_date_updated.strftime("%#d"))
             last_date_updated = (f"{date_part}{GetOrdinalSuffix(day)}{last_date_updated.strftime(' %Y')}")
 
-            updated_subtitle = tk.Label(drive_list_frame, text=f"Last Updated: {last_date_updated}", font=("Cascadia Code", 10), bg="#ffc5c5")
+            try:
+                days_since_update = (datetime.now() - last_date_updated_timestamp).days
+            except AttributeError:
+                days_since_update = -1
+            try:
+                days_since_zodded = (datetime.now() - last_date_zodded_timestamp.replace(tzinfo=None)).days
+            except AttributeError:
+                days_since_zodded = -1
+
+            days_updated_color = GetDaysSinceUpdateColor(days_since_update)
+            days_zodded_color = GetDaysSinceZoddedColor(days_since_zodded)
+
+
+            updated_subtitle = tk.Label(drive_list_frame, text=f"Last Updated: {last_date_updated}", font=("Cascadia Code", 10), fg=days_updated_color, bg="#ffc5c5")
             updated_subtitle.grid(row=row + 1, column=0, padx=10, sticky="w")
 
-            zodded_subtitle = tk.Label(drive_list_frame, text=f"Last Zodded: {last_date_zodded}", font=("Cascadia Code", 10), bg="#ffc5c5")
+            zodded_subtitle = tk.Label(drive_list_frame, text=f"Last Zodded: {last_date_zodded}", font=("Cascadia Code", 10), fg=days_zodded_color, bg="#ffc5c5")
             zodded_subtitle.grid(row=row + 2, column=0, pady=(0, 20), padx=10, sticky="w")
 
             # checkbox = tk.Checkbutton(drive_list_frame, variable=drive_enablement[letter], anchor="center", command=lambda d=letter: CheckButtonModified(d))
@@ -332,7 +358,7 @@ def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=T
     drive_list_frame.columnconfigure((0, 1), weight=1)
     EnsureLeftPaneFits()
     if run_function_again:
-        root.after(5_000, lambda: RefreshDriveList(drive_list_frame, detect_drives=True))
+        root.after(constants.REFRESH_DRIVE_LIST_TIMEOUT_MILLISECONDS, lambda: RefreshDriveList(drive_list_frame, detect_drives=True))
         
 def EnsureLeftPaneFits():
     root.update_idletasks()
@@ -376,7 +402,13 @@ def GetCurrentBlogContent():
     # what i want here, is that if the last blog content was, let's say, 0.1.0, and it's currently version 0.1.1, i want it to display 0.1.0's content if there is no content for 0.1.1. 
     # however, if there's more recent content, like 0.2.0, i don't want it to display that if the current version is 0.1.1. 
     # basically, display the version's blog content. If there's none, display the last blog content available. 
-    return GetBlogContent(constants.CURRENT_VERSION)
+    text = GetBlogContent(constants.CURRENT_VERSION)
+    if text.find('[') == -1:
+        return text
+    else:
+        global current_blog_version
+        current_blog_version = constants.CURRENT_VERSION
+        return text
 
 def GetBlogContent(version):
     data = GetAllBlogData()
@@ -402,7 +434,10 @@ def GetClosestVersion(version):
             return sorted_versions[i]
     return f"Version '{version}' either doesn't have a previous version or there is a parsing error."
 
-def GetNextBlog(version):
+def GetNextBlog():
+    global current_blog_version
+    version = current_blog_version
+
     data = GetAllBlogData()
     versions = list(data.keys())
     sorted_versions = sorted(versions, key=ComparableSemVer)
@@ -413,19 +448,25 @@ def GetNextBlog(version):
         # cant go any higher
         return data[version]
     else:
-        return data[sorted_versions[sorted_versions.index(version) + 1]]
+        current_blog_version = sorted_versions[sorted_versions.index(version) + 1]
+        return data[current_blog_version]
 
-def GetPreviousBlog(version):
+def GetPreviousBlog():
+    global current_blog_version
+    version = current_blog_version
     data = GetAllBlogData()
     versions = list(data.keys())
     sorted_versions = sorted(versions, key=ComparableSemVer)
     if not version in versions:
         version = GetClosestVersion(version)
+    
     if (sorted_versions.index(version) - 1) < 0:
         # cant go any lower
         return data[version]
     else:
-        return data[sorted_versions[sorted_versions.index(version) - 1]]
+        current_blog_version = sorted_versions[sorted_versions.index(version) - 1]
+        return data[current_blog_version]
+
 
 def SetBlog(text_to_set):
     text_box.config(state="normal")
@@ -443,7 +484,7 @@ def GetAllBlogData():
 # # # # # # # # # # # # # # # # # # # # 
 
 def GetLastDateZoddedFromDrive(letter):
-    zools_data_path = Path(letter + ":\\" + constants.DATE_MODIFIED_PATH + "\\" + constants.ZOOLS_DATA_FILE)
+    zools_data_path = Path(letter + ":\\" + constants.ZOOLS_DATA_FILE_PATH + "\\" + constants.ZOOLS_DATA_FILE)
     data = {}
     if zools_data_path.is_file():
         with open(zools_data_path, 'r', encoding='utf-8') as file_raw:
@@ -453,7 +494,7 @@ def GetLastDateZoddedFromDrive(letter):
     return None
 
 def GetLastDateUpdatedFromDrive(letter):
-    timestamp_updated_path = Path(letter + ":\\" + constants.DATE_MODIFIED_PATH + "\\" + constants.DDRTOOLS_DATE_MODIFIED_TIMESTAMP_FILE)
+    timestamp_updated_path = Path(letter + ":\\" + constants.DDR_DATE_MODIFIED_PATH + "\\" + constants.DDRTOOLS_DATE_MODIFIED_TIMESTAMP_FILE)
     data = {}
     if timestamp_updated_path.is_file():
         with open(timestamp_updated_path, 'r', encoding='utf-8') as file_raw:
@@ -462,7 +503,7 @@ def GetLastDateUpdatedFromDrive(letter):
     return None
 
 def SetLastModifiedDateOnDrive(letter, time_to_set):
-    zools_data_path = Path(letter + ":\\" + constants.DATE_MODIFIED_PATH + "\\" + constants.ZOOLS_DATA_FILE)
+    zools_data_path = Path(letter + ":\\" + constants.ZOOLS_DATA_FILE_PATH + "\\" + constants.ZOOLS_DATA_FILE)
     data = {}
     if zools_data_path.is_file():
         with open(zools_data_path, 'r', encoding='utf-8') as file_raw:
@@ -479,14 +520,14 @@ def WriteToZoolsDataFile(pathToWriteTo, dataToWrite):
     #success = ctypes.windll.kernel32.SetFileAttributesW(str(pathToWriteTo), FILE_ATTRIBUTE_HIDDEN)
 
 def DeleteZoolsDataFileOnDrive(letter):
-    zools_data_path = Path(letter + ":\\" + constants.DATE_MODIFIED_PATH + "\\" + constants.ZOOLS_DATA_FILE)
+    zools_data_path = Path(letter + ":\\" + constants.ZOOLS_DATA_FILE_PATH + "\\" + constants.ZOOLS_DATA_FILE)
     if zools_data_path.is_file():
         try:
             zools_data_path.unlink()
         except:
             print(f"There was an error removing the zools data file at {zools_data_path}.")
     else:
-        print(f"There was an error locating the zools data file at {zools_data_path}.")
+        print(f"There was an error locating the zools data file at {zools_data_path} as either the location has moved or it never existed.")
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 #        Misc/Debug Functions         
@@ -499,6 +540,7 @@ def GetConnectedDrives():
     DRIVE_REMOVABLE = 2
     DRIVE_FIXED = 3
 
+    start = time.perf_counter()
     for i in range(26):
         if not bitmask & (1 << i):
             continue
@@ -513,14 +555,14 @@ def GetConnectedDrives():
 
         volume_name = ctypes.create_unicode_buffer(261)
 
-        start = time.perf_counter()
         success = ctypes.windll.kernel32.GetVolumeInformationW(root, volume_name, len(volume_name), None, None, None, None, 0)
-        elapsed = time.perf_counter() - start
 
-        print(f"{letter}: volume query took {elapsed:.3f}s")
 
         if success:
             drive_info.append((letter, volume_name.value))
+
+    elapsed = time.perf_counter() - start
+    print(f"Refreshed drive list. Took {elapsed:.3f}s")
 
     return drive_info
 
@@ -587,7 +629,23 @@ def GenerateDummyDriveList():
 
     return dummy_drives
 
+def GetDaysSinceUpdateColor(days_since):
+    if days_since < 0:
+        return "#000000"
+    elif days_since < constants.DDRTOOLS_DAYS_SINCE_UPDATED_OKAY:
+        return constants.COLOR_DDRTOOLS_DAYS_SINCE_UPDATED_GOOD
+    elif days_since < constants.DDRTOOLS_DAYS_SINCE_UPDATED_BAD:
+        return constants.COLOR_DDRTOOLS_DAYS_SINCE_UPDATED_OKAY
+    return constants.COLOR_DDRTOOLS_DAYS_SINCE_UPDATED_BAD
 
+def GetDaysSinceZoddedColor(days_since):
+    if days_since < 0:
+            return "#000000"
+    elif days_since < constants.ZOOLS_DAYS_SINCE_UPDATED_OKAY:
+        return constants.COLOR_ZOOLS_DAYS_SINCE_UPDATED_GOOD
+    elif days_since < constants.ZOOLS_DAYS_SINCE_UPDATED_BAD:
+        return constants.COLOR_ZOOLS_DAYS_SINCE_UPDATED_OKAY
+    return constants.COLOR_ZOOLS_DAYS_SINCE_UPDATED_BAD
         
 
 
@@ -596,10 +654,8 @@ def GenerateDummyDriveList():
 # # # # # # # # # # # # # # # # # # # # 
 
 def main():
-    start = time.perf_counter()
-
+    print("Welcome to Zools, please close this live-log when done.")
     drive_info = GetConnectedDrives()
-    print(f"Drive detection took: {time.perf_counter() - start:.3f} seconds")
     # filter by only tools
     tool_drives = GetToolDrives(drive_info)
 

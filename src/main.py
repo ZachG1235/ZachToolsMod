@@ -131,6 +131,63 @@ def AddSerialScript(drive_letter:str):
         print(f"There was a problem accessing the extras folder on drive letter {drive_letter}.")
         return 0
 
+def AddNoteTemplateScript(drive_letter : str):
+    if not constants.ADD_NOTE_TEMPLATE_SCRIPT:
+        print("Adding note template script is disabled")
+        return 0
+
+    extras_path = Path(drive_letter + ":" + constants.EXTRAS_PATH)
+    notes_template_destination_path = Path(drive_letter + ":" + constants.ZOOLS_NOTE_TEMPLATE_PATH)
+    notes_template_destination_path.mkdir(parents=True, exist_ok=True)
+    if extras_path.is_dir():
+        # move over bat script
+        source_bat_file = os.getcwd() + "\\" + constants.SOURCE_TOOL_PATH + "\\" + constants.ZOOLS_NOTES_TEMPLATE_BAT_FILENAME
+        source_ps1_file = os.getcwd() + "\\" + constants.SOURCE_TOOL_PATH + "\\" + constants.ZOOLS_NOTES_TEMPLATE_PS1_FILENAME
+        source_template_file = os.getcwd() + "\\" + constants.SOURCE_TOOL_PATH + "\\" + constants.ZOOLS_NOTES_TEMPLATE_FILENAME
+        if (extras_path / constants.ZOOLS_NOTES_TEMPLATE_BAT_FILENAME).is_file():
+            shutil.copy2(source_bat_file, extras_path)
+            shutil.copy2(source_ps1_file, notes_template_destination_path)
+            shutil.copy2(source_template_file, notes_template_destination_path)
+            print(f"Re-copied Note Template .bat, .ps1, and template files on drive letter {drive_letter}.")
+        else:
+            shutil.copy2(source_bat_file, extras_path)
+            shutil.copy2(source_ps1_file, notes_template_destination_path)
+            shutil.copy2(source_template_file, notes_template_destination_path)
+            print(f"Successfully added Note Template .bat, .ps1, and template files on drive letter {drive_letter}.")
+        return 3
+
+def RemoveNoteTemplateScript(drive_letter : str):
+    extras_path = Path(drive_letter + ":" + constants.EXTRAS_PATH)
+    notes_template_destination_path = Path(drive_letter + ":" + constants.ZOOLS_NOTE_TEMPLATE_PATH)
+    notes_template_destination_path.mkdir(parents=True, exist_ok=True)
+
+    total_removing = 0
+    # if the file exists, remove it.
+    bat_file = extras_path / constants.ZOOLS_NOTES_TEMPLATE_BAT_FILENAME
+    if bat_file.exists():
+        bat_file.unlink()
+        total_removing += 1
+    else:
+        print(f"There was a problem finding the notes template bat file at {bat_file}")
+
+    ps1_file = Path(drive_letter + ":" + constants.ZOOLS_NOTE_TEMPLATE_PATH) / constants.ZOOLS_NOTES_TEMPLATE_PS1_FILENAME
+    if ps1_file.exists():
+        ps1_file.unlink()
+        total_removing += 1
+    else:
+        print(f"There was a problem finding the notes template bat file at {ps1_file}")
+
+    txt_file = Path(drive_letter + ":" + constants.ZOOLS_NOTE_TEMPLATE_PATH) / constants.ZOOLS_NOTES_TEMPLATE_FILENAME
+    if txt_file.exists():
+        txt_file.unlink()
+        total_removing += 1
+    else:
+        print(f"There was a problem finding the notes template bat file at {txt_file}")
+
+    return total_removing
+
+
+
 def RemoveUpdates(drive):
     operation_start = time.perf_counter()
     total_modifications = 0
@@ -139,6 +196,7 @@ def RemoveUpdates(drive):
 
     total_modifications += RevertRats(drive[0])
     total_modifications += RemoveSerialScript(drive[0])
+    total_modifications += RemoveNoteTemplateScript(drive[0])
 
     print(f"Operations took {time.perf_counter() - operation_start:.3f} seconds")
     print(f"= Removed {total_modifications} total updates to {drive[1]} on {drive[0]}.")
@@ -152,6 +210,7 @@ def PerformUpdate(drive):
 
     total_modifications += ModifyRats(drive[0])
     total_modifications += AddSerialScript(drive[0])
+    total_modifications += AddNoteTemplateScript(drive[0])
 
     print(f"Operations took {time.perf_counter() - operation_start:.3f} seconds")
     print(f"= Made {total_modifications} total modifications to {drive[1]}!!!")
@@ -503,6 +562,8 @@ def GetLastDateUpdatedFromDrive(letter):
     return None
 
 def SetLastModifiedDateOnDrive(letter, time_to_set):
+    Path(letter + ":\\" + constants.ZOOLS_DATA_FILE_PATH ).mkdir(parents=True, exist_ok=True)
+
     zools_data_path = Path(letter + ":\\" + constants.ZOOLS_DATA_FILE_PATH + "\\" + constants.ZOOLS_DATA_FILE)
     data = {}
     if zools_data_path.is_file():
@@ -520,14 +581,35 @@ def WriteToZoolsDataFile(pathToWriteTo, dataToWrite):
     #success = ctypes.windll.kernel32.SetFileAttributesW(str(pathToWriteTo), FILE_ATTRIBUTE_HIDDEN)
 
 def DeleteZoolsDataFileOnDrive(letter):
-    zools_data_path = Path(letter + ":\\" + constants.ZOOLS_DATA_FILE_PATH + "\\" + constants.ZOOLS_DATA_FILE)
-    if zools_data_path.is_file():
-        try:
-            zools_data_path.unlink()
+    zools_data_directory = Path(letter + ":\\" + constants.ZOOLS_DATA_FILE_PATH)
+    if zools_data_directory.is_dir():
+        # remove files in zools data directory
+        zools_data_file = zools_data_directory / constants.ZOOLS_DATA_FILE
+        try: 
+            zools_data_file.unlink()
         except:
-            print(f"There was an error removing the zools data file at {zools_data_path}.")
+            print(f"There was an error removing the zools data file at {zools_data_file}")
+
+        zools_note_template_file = zools_data_directory / constants.ZOOLS_NOTES_TEMPLATE_FILENAME
+        try:
+            zools_note_template_file.unlink()
+        except:
+            print(f"File {zools_note_template_file} could not be found, most likely removed already.")
+            
+        zools_note_template_ps1_file = zools_data_directory / constants.ZOOLS_NOTES_TEMPLATE_PS1_FILENAME
+        try:
+            zools_note_template_ps1_file.unlink()
+        except:
+            print(f"File {zools_note_template_ps1_file} could not be found, most likely removed already.")
+
+        # Now that the directory is empty, attempt to remove the directory
+        try:
+            zools_data_directory.rmdir()
+            print(f"Removed the Zools data directory at {zools_data_directory}")
+        except:
+            print(f"There was an ERROR removing the zools data directory at {zools_data_directory}.")
     else:
-        print(f"There was an error locating the zools data file at {zools_data_path} as either the location has moved or it never existed.")
+        print(f"There was an error locating the zools data directory at {zools_data_directory} as either the location has moved or it never existed.")
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 #        Misc/Debug Functions         

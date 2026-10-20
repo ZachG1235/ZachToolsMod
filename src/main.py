@@ -187,6 +187,50 @@ def RemoveNoteTemplateScript(drive_letter : str):
     return total_removing
 
 
+def AddNoteTemplateGUIScript(drive_letter : str):
+    if not constants.ADD_NOTE_TEMPLATE_GUI_SCRIPT:
+        print("Adding note template GUI script is disabled")
+        return 0
+
+    extras_path = Path(drive_letter + ":" + constants.EXTRAS_PATH)
+    ps1_destination_path = Path(drive_letter + ":" + constants.ZOOLS_NOTE_TEMPLATE_PATH)
+    ps1_destination_path.mkdir(parents=True, exist_ok=True)
+    if extras_path.is_dir():
+        # move over bat script
+        source_bat_file = os.getcwd() + "\\" + constants.SOURCE_TOOL_PATH + "\\" + constants.ZOOLS_NOTES_TEMPLATE_BAT_GUI_FILENAME
+        source_ps1_file = os.getcwd() + "\\" + constants.SOURCE_TOOL_PATH + "\\" + constants.ZOOLS_NOTES_TEMPLATE_PS1_GUI_FILENAME
+        if (extras_path / constants.ZOOLS_NOTES_TEMPLATE_BAT_GUI_FILENAME).is_file():
+            shutil.copy2(source_bat_file, extras_path)
+            shutil.copy2(source_ps1_file, ps1_destination_path)
+            print(f"Re-copied Note Template GUI .bat and .ps1 files on drive letter {drive_letter}.")
+        else:
+            shutil.copy2(source_bat_file, extras_path)
+            shutil.copy2(source_ps1_file, ps1_destination_path)
+            print(f"Successfully added Note Template GUI .bat and .ps1 on drive letter {drive_letter}.")
+        return 2
+
+def RemoveNoteTemplateGUIScript(drive_letter : str):
+    extras_path = Path(drive_letter + ":" + constants.EXTRAS_PATH)
+    ps1_destination_path = Path(drive_letter + ":" + constants.ZOOLS_NOTE_TEMPLATE_PATH)
+    ps1_destination_path.mkdir(parents=True, exist_ok=True)
+
+    total_removing = 0
+    # if the file exists, remove it.
+    bat_file = extras_path / constants.ZOOLS_NOTES_TEMPLATE_BAT_GUI_FILENAME
+    if bat_file.exists():
+        bat_file.unlink()
+        total_removing += 1
+    else:
+        print(f"There was a problem finding the notes template gui bat file at {bat_file}")
+
+    ps1_file = Path(drive_letter + ":" + constants.ZOOLS_NOTE_TEMPLATE_PATH) / constants.ZOOLS_NOTES_TEMPLATE_PS1_GUI_FILENAME
+    if ps1_file.exists():
+        ps1_file.unlink()
+        total_removing += 1
+    else:
+        print(f"There was a problem finding the notes template gui bat file at {ps1_file}")
+
+    return total_removing
 
 def RemoveUpdates(drive):
     operation_start = time.perf_counter()
@@ -197,6 +241,7 @@ def RemoveUpdates(drive):
     total_modifications += RevertRats(drive[0])
     total_modifications += RemoveSerialScript(drive[0])
     total_modifications += RemoveNoteTemplateScript(drive[0])
+    total_modifications += RemoveNoteTemplateGUIScript(drive[0])
 
     print(f"Operations took {time.perf_counter() - operation_start:.3f} seconds")
     print(f"= Removed {total_modifications} total updates to {drive[1]} on {drive[0]}.")
@@ -211,6 +256,7 @@ def PerformUpdate(drive):
     total_modifications += ModifyRats(drive[0])
     total_modifications += AddSerialScript(drive[0])
     total_modifications += AddNoteTemplateScript(drive[0])
+    total_modifications += AddNoteTemplateGUIScript(drive[0])
 
     print(f"Operations took {time.perf_counter() - operation_start:.3f} seconds")
     print(f"= Made {total_modifications} total modifications to {drive[1]}!!!")
@@ -601,6 +647,11 @@ def DeleteZoolsDataFileOnDrive(letter):
             zools_note_template_ps1_file.unlink()
         except:
             print(f"File {zools_note_template_ps1_file} could not be found, most likely removed already.")
+        zools_note_template_ps1_gui_file = zools_data_directory / constants.ZOOLS_NOTES_TEMPLATE_PS1_GUI_FILENAME
+        try:
+            zools_note_template_ps1_gui_file.unlink()
+        except:
+            print(f"File {zools_note_template_ps1_gui_file} could not be found, most likely removed already.")
 
         # Now that the directory is empty, attempt to remove the directory
         try:

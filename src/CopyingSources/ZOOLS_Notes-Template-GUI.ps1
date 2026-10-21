@@ -6,26 +6,26 @@ $outputFile = "C:\DDRTools\log\persist.log"
 
 if (-not (Test-Path -LiteralPath $inputFile -PathType Leaf))
 {
-    Write-Host "Error: persist.log does not exist. Exiting."
-    exit 1
+    # idk why i decided to just exit the program when the persistent notes did not exist. 
+    #Write-Host "Error: persist.log does not exist. Exiting."
+    #exit 1
+
+    # just make the notes!
+    New-Item -Path "C:\DDRTools\log" -Name "persist.log" -ItemType File
 }
 
 
-
-
-# $labelCountFontSize = 22
-# $labelCountFont = New-Object System.Drawing.Font("Segoe UI", $labelCountFontSize, [System.Drawing.FontStyle]::Bold)
-# $labelCountColor = [System.Drawing.Color]::Green
+# GUI STUFF
 $buttonFont = New-Object System.Drawing.Font("Segoe UI", 12)
 
-$formClicker = New-Object System.Windows.Forms.Form     # Define the form - this is the window where all other componenets will be added with Controls.Add()
-$formClicker.Text = "Notes Template Maker: GUI"          # Title the window
-$formClicker.ClientSize = New-Object System.Drawing.Size(500, 600)    # Size the form
-$formClicker.StartPosition = "CenterScreen"             # Center our form when it loads
-$formClicker.FormBorderStyle = "FixedSingle"            # Remove the resize handle
-$formClicker.MinimizeBox = $false                       # Hides the minimize button
-$formClicker.MaximizeBox = $false                       # Hides the maximize button
-$formClicker.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon("$env:WINDIR\System32\msra.exe")   # Pick an icon
+$formClicker = New-Object System.Windows.Forms.Form   
+$formClicker.Text = "Notes Template Maker: GUI"         
+$formClicker.ClientSize = New-Object System.Drawing.Size(500, 600)    
+$formClicker.StartPosition = "CenterScreen"   
+$formClicker.FormBorderStyle = "FixedSingle"  
+$formClicker.MinimizeBox = $false             
+$formClicker.MaximizeBox = $false             
+$formClicker.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon("$env:WINDIR\System32\msra.exe")   # Icon for Window. Replace later
 
 $startX = 20
 $startY = 20
@@ -34,6 +34,7 @@ $labelWidth = 130
 $textBoxWidth = 280
 $rowHeight = 20
 
+# you can add to these and it should just work (dimensions may be off height-wise)
 $fieldNames = @(
     "Work Order",
     "Quality Care Email",
@@ -52,6 +53,7 @@ $fieldNames = @(
 $script:textBoxes = @()
 $script:formValues = @()
 
+# Create fields 
 for ($i = 0; $i -lt $fieldNames.Count; $i++)
 {
     $currentY = $startY + ($i * $rowSpacing)
@@ -91,8 +93,8 @@ $buttonSub.Font = $buttonFont
 $buttonSub.AutoSize = $true
 $formClicker.Controls.Add($buttonSub)
 
+# calculate best button placements
 $buttonY = $formClicker.ClientSize.Height - $buttonSkip.Height - 10
-
 $totalWidth = $buttonSkip.Width + $buttonSub.Width + $buttonEnd.Width + 20
 $startX = [int](($formClicker.ClientSize.Width - $totalWidth) / 2)
 
@@ -104,26 +106,13 @@ $buttonSub.Location = New-Object System.Drawing.Point(
     ($startX + $buttonSkip.Width + $buttonSkip.Width + 20), $buttonY
 )
 
-# $buttonSkipX =(($formClicker.ClientSize.Width - $buttonSkip.Width - $buttonSub.Width)/2 - 5)
-# $buttonSubX = ($buttonSkipX + $buttonSkip.Width + 5)
-# $buttonY = ($formClicker.ClientSize.Height - $buttonSkip.Height - 10)
-
-# # Place the elements on the form
-# $buttonSkip.Location = New-Object System.Drawing.Point($buttonSkipX, $buttonY)
-# $buttonSub.Location = New-Object System.Drawing.Point($buttonSubX, $buttonY)
-
-
-#region Logic
-
 $buttonEnd.Add_Click({
     $formClicker.Tag = "Cancel"
     $formClicker.Close()
 })
-
 $buttonSkip.Add_Click({
     $formClicker.Close()
 })
-
 $buttonSub.Add_Click({
     $script:formValues = @{}
 
@@ -134,15 +123,17 @@ $buttonSub.Add_Click({
     $formClicker.Close()
 })
 
+# show form
 $formClicker.ShowDialog() | Out-Null
 
+# if Exit is clicked, just end the program
 if ($formClicker.Tag -eq "Cancel")
 {
     exit 0
 }
 
 
-
+# Format of persistent notes. The key is what was written in field names on line 38
 $appendTextFormatted = @"
 *****************************
 Product Keys 
@@ -171,11 +162,12 @@ Office: $($formValues["Office"])
 "@
 
 
-# DEBUG, can remove after confirming it doesn't erase data
+# This is just me making a backup of persistent notes before modifying it. We can remove after confirming this won't fail and erase data. Or keep it, backups are only a couple kilobytes.
 $Timestamp = (Get-Date).ToString("yyyy-MM-dd_HHmmss_fff")
 Copy-Item -Path $inputFile -Destination "C:\DDRTools\log\persist-backup-$Timestamp.log"
 
 
+# read base64 text to decode
 $base64 = Get-Content $inputFile -Raw
 if ([string]::IsNullOrWhiteSpace($base64)) 
 {
@@ -187,6 +179,7 @@ else
     $originalText = [System.Text.Encoding]::UTF8.GetString($bytes)
 }
 
+# append new formatted notes to end of persistent notes
 $combinedText = $originalText + $appendTextFormatted
 $combinedBites = [System.Text.Encoding]::UTF8.GetBytes($combinedText)
 $outputBase64 = [Convert]::ToBase64String($combinedBites)

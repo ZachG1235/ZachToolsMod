@@ -400,7 +400,7 @@ def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=T
 
     for i, each_drive in enumerate(global_drive_info):
         letter = each_drive[0]
-        row = i * 3
+        row = i * 4
 
         if letter not in drive_enablement:
             drive_enablement[letter] = tk.BooleanVar(master=root, value=True)
@@ -419,7 +419,7 @@ def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=T
         last_date_zodded_timestamp = last_date_zodded
 
         if last_date_zodded is None:
-            last_date_zodded = "Not Modified"
+            last_date_zodded = "Not Zodified"
         else:
             last_date_zodded = datetime.fromisoformat(last_date_zodded)
             last_date_zodded_timestamp = last_date_zodded
@@ -449,12 +449,28 @@ def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=T
             days_updated_color = GetDaysSinceUpdateColor(days_since_update)
             days_zodded_color = GetDaysSinceZoddedColor(days_since_zodded)
 
+            zodded_version_text = f"{GetVersionNumberFromZoddedDrive(letter)}"
+            if zodded_version_text == "None":
+                zodded_version_text = "Unknown"
+            else:
+                zodded_version_text = "v" + zodded_version_text
+
+            zodded_version_name = ""
+            if zodded_version_text != "Unknown":
+                zodded_version_name += constants.VERSION_NAMING_SCHEMES[zodded_version_text[1:].split(".")[0]]["NAME"] + " "
+                zodded_version_name += constants.VERSION_NAMING_SCHEMES[zodded_version_text[1:].split(".")[0]][zodded_version_text[1:].split(".")[1]] + " "
+                # get roman numberal and append
+                zodded_version_name += int_to_roman(int(zodded_version_text[1:].split(".")[2]))
+                zodded_version_name = "(" + zodded_version_name + ")"
 
             updated_subtitle = tk.Label(drive_list_frame, text=f"Last Updated: {last_date_updated}", font=("Cascadia Code", 10), fg=days_updated_color, bg="#ffc5c5")
             updated_subtitle.grid(row=row + 1, column=0, padx=10, sticky="w")
 
-            zodded_subtitle = tk.Label(drive_list_frame, text=f"Last Zodded: {last_date_zodded}", font=("Cascadia Code", 10), fg=days_zodded_color, bg="#ffc5c5")
-            zodded_subtitle.grid(row=row + 2, column=0, pady=(0, 20), padx=10, sticky="w")
+            zodded_subtitle = tk.Label(drive_list_frame, text=f" Last Zodded: {last_date_zodded}", font=("Cascadia Code", 10), fg=days_zodded_color, bg="#ffc5c5")
+            zodded_subtitle.grid(row=row + 2, column=0, padx=10, sticky="w")
+
+            zodded_version = tk.Label(drive_list_frame, text=f"     Version: {zodded_version_text} {zodded_version_name}", font=("Cascadia Code", 10), fg=days_zodded_color, bg="#ffc5c5")
+            zodded_version.grid(row=row + 3, column = 0, pady=(0, 20), padx=10, sticky="w")
 
             # checkbox = tk.Checkbutton(drive_list_frame, variable=drive_enablement[letter], anchor="center", command=lambda d=letter: CheckButtonModified(d))
             checkbox = CustomCheckbutton(drive_list_frame, variable=drive_enablement[letter], command=lambda d=letter: CheckButtonModified(d), size=24)
@@ -598,6 +614,16 @@ def GetLastDateZoddedFromDrive(letter):
             return data[constants.ZKEY_LAST_DATE_UPDATED]
     return None
 
+def GetVersionNumberFromZoddedDrive(letter):
+    zools_data_path = Path(letter + ":\\" + constants.ZOOLS_DATA_FILE_PATH + "\\" + constants.ZOOLS_DATA_FILE)
+    data = {}
+    if zools_data_path.is_file():
+        with open(zools_data_path, 'r', encoding='utf-8') as file_raw:
+            data = json.load(file_raw)
+        if constants.ZKEY_LAST_DATE_UPDATED_VERSION in data:
+            return data[constants.ZKEY_LAST_DATE_UPDATED_VERSION]
+    return None
+
 def GetLastDateUpdatedFromDrive(letter):
     timestamp_updated_path = Path(letter + ":\\" + constants.DDR_DATE_MODIFIED_PATH + "\\" + constants.DDRTOOLS_DATE_MODIFIED_TIMESTAMP_FILE)
     data = {}
@@ -616,6 +642,7 @@ def SetLastModifiedDateOnDrive(letter, time_to_set):
         with open(zools_data_path, 'r', encoding='utf-8') as file_raw:
             data = json.load(file_raw)
     data[constants.ZKEY_LAST_DATE_UPDATED] = time_to_set
+    data[constants.ZKEY_LAST_DATE_UPDATED_VERSION] = constants.CURRENT_VERSION
     WriteToZoolsDataFile(zools_data_path, data)
     
 def WriteToZoolsDataFile(pathToWriteTo, dataToWrite):
@@ -723,6 +750,27 @@ def GetOrdinalSuffix(day):
         return "rd"
     else:
         return "th"
+
+# i didnt write this
+def int_to_roman(num: int) -> str:
+    if not (0 < num < 4000):
+        raise ValueError("Roman numerals only support integers between 1 and 3999.")
+
+    # Mapping must include both single symbols and subtractive pairs
+    roman_map = [
+        (1000, 'M'), (900, 'CM'), (500, 'D'), (400, 'CD'),
+        (100, 'C'), (90, 'XC'), (50, 'L'), (40, 'XL'),
+        (10, 'X'), (9, 'IX'), (5, 'V'), (4, 'IV'), (1, 'I')
+    ]
+    
+    result = []
+    for value, symbol in roman_map:
+        if num == 0:
+            break
+        count, num = divmod(num, value)
+        result.append(symbol * count)
+        
+    return "".join(result)
 
 def ComparableSemVer(sem_ver:str):
     return_list = []

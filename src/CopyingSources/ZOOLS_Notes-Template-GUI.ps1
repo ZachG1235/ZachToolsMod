@@ -20,7 +20,7 @@ $buttonFont = New-Object System.Drawing.Font("Segoe UI", 12)
 
 $formClicker = New-Object System.Windows.Forms.Form   
 $formClicker.Text = "Notes Template Maker: GUI"         
-$formClicker.ClientSize = New-Object System.Drawing.Size(500, 600)    
+$formClicker.ClientSize = New-Object System.Drawing.Size(500, 675)    
 $formClicker.StartPosition = "CenterScreen"   
 $formClicker.FormBorderStyle = "FixedSingle"  
 $formClicker.MinimizeBox = $false             
@@ -37,6 +37,8 @@ $rowHeight = 20
 # you can add to these and it should just work (dimensions may be off height-wise)
 $fieldNames = @(
     "Work Order",
+    "QC Number",
+    "QC Serial",
     "Quality Care Email",
     "Trend Micro ProdKey",
     "Email 1",
@@ -81,11 +83,11 @@ $buttonEnd.Font = $buttonFont
 $buttonEnd.AutoSize = $true                         
 $formClicker.Controls.Add($buttonEnd)
 
-$buttonSkip = New-Object System.Windows.Forms.Button
-$buttonSkip.Text = "Blank"
-$buttonSkip.Font = $buttonFont                       
-$buttonSkip.AutoSize = $true                         
-$formClicker.Controls.Add($buttonSkip)
+# $buttonSkip = New-Object System.Windows.Forms.Button
+# $buttonSkip.Text = "Blank"
+# $buttonSkip.Font = $buttonFont                       
+# $buttonSkip.AutoSize = $true                         
+# $formClicker.Controls.Add($buttonSkip)
 
 $buttonSub = New-Object System.Windows.Forms.Button
 $buttonSub.Text = "Submit"
@@ -94,25 +96,28 @@ $buttonSub.AutoSize = $true
 $formClicker.Controls.Add($buttonSub)
 
 # calculate best button placements
-$buttonY = $formClicker.ClientSize.Height - $buttonSkip.Height - 10
-$totalWidth = $buttonSkip.Width + $buttonSub.Width + $buttonEnd.Width + 20
+$buttonY = $formClicker.ClientSize.Height - $buttonSub.Height - 10
+# $totalWidth = $buttonSkip.Width + $buttonSub.Width + $buttonEnd.Width + 20
+$totalWidth = $buttonSub.Width + $buttonEnd.Width + 20
 $startX = [int](($formClicker.ClientSize.Width - $totalWidth) / 2)
 
 $buttonEnd.Location = New-Object System.Drawing.Point($startX, $buttonY)
-$buttonSkip.Location = New-Object System.Drawing.Point(
-    ($startX + $buttonSkip.Width + 10), $buttonY
-)
+# $buttonSkip.Location = New-Object System.Drawing.Point(
+#     ($startX + $buttonSkip.Width + 10), $buttonY
+# )
 $buttonSub.Location = New-Object System.Drawing.Point(
-    ($startX + $buttonSkip.Width + $buttonSkip.Width + 20), $buttonY
+    # ($startX + $buttonSkip.Width + $buttonSkip.Width + 20), 
+    ($startX + $buttonEnd.Width + 20), 
+    $buttonY
 )
 
 $buttonEnd.Add_Click({
     $formClicker.Tag = "Cancel"
     $formClicker.Close()
 })
-$buttonSkip.Add_Click({
-    $formClicker.Close()
-})
+# $buttonSkip.Add_Click({
+#     $formClicker.Close()
+# })
 $buttonSub.Add_Click({
     $script:formValues = @{}
 
@@ -132,14 +137,15 @@ if ($formClicker.Tag -eq "Cancel")
     exit 0
 }
 
-
+$currentDate = Get-Date -Format "MM/dd/yyyy"
 # Format of persistent notes. The key is what was written in field names on line 38
 $appendTextFormatted = @"
 *****************************
 Product Keys 
-(modified as of WO#$($formValues["Work Order"]))
+(modified as of WO#$($formValues["Work Order"]) ($($currentDate)))
 *****************************
 Quality Care
+This Machine: $($formValues["QC Number"]) - $($formValues["QC Serial"])
 Email: $($formValues["Quality Care Email"])
 Trend Micro AV Key: $($formValues["Trend Micro ProdKey"])
 *****************************
@@ -158,6 +164,9 @@ MS Account
 email: $($formValues["MS Email"])
 PW: $($formValues["MS PW"])
 Office: $($formValues["Office"])
+*****************************
+Other Accounts
+...
 *****************************
 "@
 

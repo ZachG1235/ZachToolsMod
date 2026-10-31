@@ -29,11 +29,11 @@ ZOOLS_NOTES_TEMPLATE_PS1_GUI_FILENAME = "ZOOLS_Notes-Template-GUI.ps1"
 
 
 # BOOLS
-MODIFY_RAT_LIST = True
+MODIFY_RAT_LIST = False
 ADD_SERIAL_SCRIPT = True
 DO_GUI = True
 MODIFY_RAT_PATH = [
-    False,
+    True,
     True,
     True
 ]
@@ -54,8 +54,10 @@ REFRESH_DRIVE_LIST_TIMEOUT_MILLISECONDS = 8000
 
 # KEYS
 ZKEY_LAST_DATE_UPDATED = "last_date_updated"
-CURRENT_VERSION = "0.1.6"
+ZKEY_LAST_DATE_UPDATED_VERSION = "last_date_updated_version"
+CURRENT_VERSION = "0.1.7"
 
+# # # GUI THINGS # # # 
 # COLORS
 COLOR_DDRTOOLS_DAYS_SINCE_UPDATED_GOOD = "#17a704"
 COLOR_DDRTOOLS_DAYS_SINCE_UPDATED_OKAY = "#918700"
@@ -63,6 +65,26 @@ COLOR_DDRTOOLS_DAYS_SINCE_UPDATED_BAD = "#da0000"
 COLOR_ZOOLS_DAYS_SINCE_UPDATED_GOOD = "#17a704"
 COLOR_ZOOLS_DAYS_SINCE_UPDATED_OKAY = "#918700"
 COLOR_ZOOLS_DAYS_SINCE_UPDATED_BAD = "#da0000"
+
+# VERSION NAMES
+# major: Color
+# minor: celestial body
+# roman numeral
+VERSION_NAMING_SCHEMES = {
+    "0": {
+        "NAME": "Red",
+        "0" : "Mercury",
+        "1" : "Venus",
+        "2" : "Earth",
+        "3" : "Mars",
+        "4" : "Jupiter",
+        "5" : "Saturn",
+        "6" : "Uranus",
+        "7" : "Neptune",
+    },
+    "1": {},
+    "2": {}
+}
 
 # DEBUG CONSTANTS
 DBG_USE_DUMMY_DRIVES = False

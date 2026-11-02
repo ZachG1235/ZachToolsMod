@@ -72,16 +72,12 @@ GUI_THEME_COLORS = {
         "HeaderBG": "#d99b9b",
         "LeftPanelBG" : "#ffc5c5",
         "LeftPanelButtonBG" : "#d99b9b",
-        "MainPanelBG" : "",
-        "MainPanelTextBG": "",
         "MainPanelButton": "#FFB0B0"
     },
     "Blue": {
         "HeaderBG": "#a69bd9",
         "LeftPanelBG" : "#d9c5ff",
         "LeftPanelButtonBG" : "#9f9bd9",
-        "MainPanelBG" : "",
-        "MainPanelTextBG": "",
         "MainPanelButton": "#B1B0FF"
     }
 }

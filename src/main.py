@@ -8,12 +8,26 @@ from datetime import datetime, timezone, timedelta
 import constants
 from utils.checkbtn import CustomCheckbutton 
 
+# helper functions
+def GetThemedColorFromKey(theme : str, colorKey : str):
+    try:
+        return constants.GUI_THEME_COLORS[theme][colorKey]
+    except:
+        return "#ffffff"
+
+def GetColorFromVersionKey(version : str, colorKey : str):
+    verMajor = version.split(".")[0]
+    try:
+        return constants.GUI_THEME_COLORS[constants.VERSION_NAMING_SCHEMES[verMajor]["NAME"]][colorKey]
+    except:
+        return "#ffffff"
+
 # Global variables
 root = tk.Tk()
 
 paned_window = tk.PanedWindow(root, orient=tk.HORIZONTAL)
-left_pane = tk.Frame(paned_window, width=200, relief=tk.SUNKEN, bg="#ffc5c5")
-drive_list_frame = tk.Frame(left_pane, bg="#ffc5c5")
+left_pane = tk.Frame(paned_window, width=200, relief=tk.SUNKEN, bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "LeftPanelBG"))
+drive_list_frame = tk.Frame(left_pane, bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "LeftPanelBG"))
 right_pane = tk.Frame(paned_window, width=400, relief=tk.SUNKEN)
 
 text_frame = tk.Frame(right_pane)
@@ -297,15 +311,14 @@ def RemoveUpdateGUI():
 def ProduceWindow():
     root.title("Zools GUI")
     root.geometry("1200x700")
-    root.configure(bg="#d99b9b") 
 
-    top_frame = tk.Frame(root, bg="#d99b9b")
+    top_frame = tk.Frame(root, bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "HeaderBG"))
     top_frame.pack(fill=tk.X)
 
-    top_label = tk.Label(top_frame, text="ZOOLS", font=("Sitka Text", 30), bg="#d99b9b")
+    top_label = tk.Label(top_frame, text="ZOOLS", font=("Sitka Text", 30), bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "HeaderBG"))
     top_label.pack(side=tk.TOP, pady=(15, 0))
 
-    version_label = tk.Label(top_frame, text=f"Version {constants.CURRENT_VERSION}", font=("Sitka Text", 14), bg="#d99b9b")
+    version_label = tk.Label(top_frame, text=f"Version: {GetVersionNameFromNumber(constants.CURRENT_VERSION)} (v{constants.CURRENT_VERSION})", font=("Sitka Text", 14), bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "HeaderBG"))
     version_label.pack(side=tk.BOTTOM, anchor=tk.SE, padx=5, pady=3)
 
     AddConfigurationOptions()
@@ -319,7 +332,7 @@ def AddConfigurationOptions():
     paned_window.pack(fill=tk.BOTH, expand=True)
     paned_window.add(left_pane)
 
-    left_label = tk.Label(left_pane, text="Connected Drives", font=("Sitka Heading Semibold", 20, "bold", "underline"), bg="#ffc5c5")
+    left_label = tk.Label(left_pane, text="Connected Drives", font=("Sitka Heading Semibold", 20, "bold", "underline"), bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "LeftPanelBG"))
     left_label.pack(pady=20, padx=10)
 
     # Drive Frame
@@ -329,7 +342,7 @@ def AddConfigurationOptions():
     RefreshDriveList(drive_list_frame)
 
     # Bottom Frame (buttons)
-    bottom_frame = tk.Frame(left_pane, bg="#d99b9b", height=100)
+    bottom_frame = tk.Frame(left_pane, bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "LeftPanelButtonBG"), height=100)
     bottom_frame.pack(side=tk.BOTTOM, fill=tk.X)
     bottom_frame.pack_propagate(False)
 
@@ -353,13 +366,13 @@ def AddConfigurationOptions():
     blog_nav_frame = tk.Frame(right_pane)
     blog_nav_frame.pack(side=tk.BOTTOM, pady=(0, 10))
 
-    previous_blog_button = tk.Button(blog_nav_frame, text="<-- Previous Version", command=lambda: SetBlog(GetPreviousBlog()), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg="#FFB0B0")
+    previous_blog_button = tk.Button(blog_nav_frame, text="<-- Previous Version", command=lambda: SetBlog(GetPreviousBlog()), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "MainPanelButton"))
     previous_blog_button.pack(side=tk.LEFT, padx=5)
 
-    current_blog_button = tk.Button(blog_nav_frame, text="Current Version", command=lambda: SetBlog(GetCurrentBlogContent()), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg="#FFB0B0")
+    current_blog_button = tk.Button(blog_nav_frame, text="Current Version", command=lambda: SetBlog(GetCurrentBlogContent()), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "MainPanelButton"))
     current_blog_button.pack(side=tk.LEFT, padx=5)
 
-    next_blog_button = tk.Button(blog_nav_frame, text="Next Version -->", command=lambda: SetBlog(GetNextBlog()), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg="#FFB0B0")
+    next_blog_button = tk.Button(blog_nav_frame, text="Next Version -->", command=lambda: SetBlog(GetNextBlog()), padx=10, pady=10, font=("Sitka Heading Semibold", 15), bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "MainPanelButton"))
     next_blog_button.pack(side=tk.LEFT, padx=5)
 
 
@@ -405,7 +418,7 @@ def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=T
         if letter not in drive_enablement:
             drive_enablement[letter] = tk.BooleanVar(master=root, value=True)
 
-        lbl = tk.Label(drive_list_frame, text=f"{each_drive[1]} ({letter}:)", font=("Cascadia Code", 12, "bold"), bg="#ffc5c5")
+        lbl = tk.Label(drive_list_frame, text=f"{each_drive[1]} ({letter}:)", font=("Cascadia Code", 12, "bold"), bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "LeftPanelBG"))
         lbl.grid(row=row, column=0, pady=(5, 0), padx=10, columnspan=2)
 
         if constants.DBG_DISPLAY_TIMESTAMP_AS_NOW:
@@ -449,27 +462,22 @@ def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=T
             days_updated_color = GetDaysSinceUpdateColor(days_since_update)
             days_zodded_color = GetDaysSinceZoddedColor(days_since_zodded)
 
-            zodded_version_text = f"{GetVersionNumberFromZoddedDrive(letter)}"
-            if zodded_version_text == "None":
-                zodded_version_text = "Unknown"
+            zodded_version_number = f"{GetVersionNumberFromZoddedDrive(letter)}"
+            zodded_version_name = GetVersionNameFromNumber(zodded_version_number)
+            zodded_version_name = "(" + zodded_version_name + ")"
+
+            if zodded_version_number == "None":
+                zodded_version_number = "Unknown"
             else:
-                zodded_version_text = "v" + zodded_version_text
+                zodded_version_number = "v" + zodded_version_number
 
-            zodded_version_name = ""
-            if zodded_version_text != "Unknown":
-                zodded_version_name += constants.VERSION_NAMING_SCHEMES[zodded_version_text[1:].split(".")[0]]["NAME"] + " "
-                zodded_version_name += constants.VERSION_NAMING_SCHEMES[zodded_version_text[1:].split(".")[0]][zodded_version_text[1:].split(".")[1]] + " "
-                # get roman numberal and append
-                zodded_version_name += int_to_roman(int(zodded_version_text[1:].split(".")[2]))
-                zodded_version_name = "(" + zodded_version_name + ")"
-
-            updated_subtitle = tk.Label(drive_list_frame, text=f"Last Updated: {last_date_updated}", font=("Cascadia Code", 10), fg=days_updated_color, bg="#ffc5c5")
+            updated_subtitle = tk.Label(drive_list_frame, text=f"Last Updated: {last_date_updated}", font=("Cascadia Code", 10), fg=days_updated_color, bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "LeftPanelBG"))
             updated_subtitle.grid(row=row + 1, column=0, padx=10, sticky="w")
 
-            zodded_subtitle = tk.Label(drive_list_frame, text=f" Last Zodded: {last_date_zodded}", font=("Cascadia Code", 10), fg=days_zodded_color, bg="#ffc5c5")
+            zodded_subtitle = tk.Label(drive_list_frame, text=f" Last Zodded: {last_date_zodded}", font=("Cascadia Code", 10), fg=days_zodded_color, bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "LeftPanelBG"))
             zodded_subtitle.grid(row=row + 2, column=0, padx=10, sticky="w")
 
-            zodded_version = tk.Label(drive_list_frame, text=f"     Version: {zodded_version_text} {zodded_version_name}", font=("Cascadia Code", 10), fg=days_zodded_color, bg="#ffc5c5")
+            zodded_version = tk.Label(drive_list_frame, text=f"     Version: {zodded_version_number} {zodded_version_name}", font=("Cascadia Code", 10), fg=days_zodded_color, bg=GetColorFromVersionKey(constants.CURRENT_VERSION, "LeftPanelBG"))
             zodded_version.grid(row=row + 3, column = 0, pady=(0, 20), padx=10, sticky="w")
 
             # checkbox = tk.Checkbutton(drive_list_frame, variable=drive_enablement[letter], anchor="center", command=lambda d=letter: CheckButtonModified(d))
@@ -750,6 +758,20 @@ def GetOrdinalSuffix(day):
         return "rd"
     else:
         return "th"
+
+def GetVersionNameFromNumber(versionNumber : str):
+    name = ""
+    if versionNumber != "Unknown" and versionNumber != "None":
+        verMajor, verMinor, verFix = versionNumber.split(".")
+        name += constants.VERSION_NAMING_SCHEMES[verMajor]["NAME"] + " " + constants.VERSION_NAMING_SCHEMES[verMajor][verMinor] + " "
+        # get roman numberal and append
+        if verFix == "0":
+            name += constants.HOTFIX_VERSION_ZERO_NAME
+        else:
+            name += int_to_roman(int(verFix))
+    return name
+
+
 
 # i didnt write this
 def int_to_roman(num: int) -> str:

@@ -55,7 +55,8 @@ REFRESH_DRIVE_LIST_TIMEOUT_MILLISECONDS = 8000
 # KEYS
 ZKEY_LAST_DATE_UPDATED = "last_date_updated"
 ZKEY_LAST_DATE_UPDATED_VERSION = "last_date_updated_version"
-CURRENT_VERSION = "0.1.7"
+CURRENT_VERSION = "1.0.0"
+HOTFIX_VERSION_ZERO_NAME = "Release"
 
 # # # GUI THINGS # # # 
 # COLORS
@@ -66,6 +67,25 @@ COLOR_ZOOLS_DAYS_SINCE_UPDATED_GOOD = "#17a704"
 COLOR_ZOOLS_DAYS_SINCE_UPDATED_OKAY = "#918700"
 COLOR_ZOOLS_DAYS_SINCE_UPDATED_BAD = "#da0000"
 
+GUI_THEME_COLORS = {
+    "Red": {
+        "HeaderBG": "#d99b9b",
+        "LeftPanelBG" : "#ffc5c5",
+        "LeftPanelButtonBG" : "#d99b9b",
+        "MainPanelBG" : "",
+        "MainPanelTextBG": "",
+        "MainPanelButton": "#FFB0B0"
+    },
+    "Blue": {
+        "HeaderBG": "#a69bd9",
+        "LeftPanelBG" : "#d9c5ff",
+        "LeftPanelButtonBG" : "#9f9bd9",
+        "MainPanelBG" : "",
+        "MainPanelTextBG": "",
+        "MainPanelButton": "#B1B0FF"
+    }
+}
+
 # VERSION NAMES
 # major: Color
 # minor: celestial body
@@ -73,16 +93,28 @@ COLOR_ZOOLS_DAYS_SINCE_UPDATED_BAD = "#da0000"
 VERSION_NAMING_SCHEMES = {
     "0": {
         "NAME": "Red",
-        "0" : "Mercury",
-        "1" : "Venus",
-        "2" : "Earth",
-        "3" : "Mars",
-        "4" : "Jupiter",
-        "5" : "Saturn",
-        "6" : "Uranus",
-        "7" : "Neptune",
+            "0" : "Mercury",
+            "1" : "Venus",
+            "2" : "Earth",
+            "3" : "Mars",
+            "4" : "Jupiter",
+            "5" : "Saturn",
+            "6" : "Uranus",
+            "7" : "Neptune",
     },
-    "1": {},
+    "1": {
+        "NAME": "Blue",
+            "0" : "Water",
+            "1" : "Branch",
+            "2" : "Cloud",
+            "3" : "Soil",
+            "4" : "Grass",
+            "5" : "Weather",
+            "6" : "Leaf",
+            "7" : "Breeze",
+            "8" : "Shrub",
+            "9" : "Foliage",
+    },
     "2": {}
 }
 

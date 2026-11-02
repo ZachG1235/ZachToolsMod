@@ -470,7 +470,9 @@ def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=T
 
             zodded_version_number = f"{GetVersionNumberFromZoddedDrive(letter)}"
             zodded_version_name = GetVersionNameFromNumber(zodded_version_number)
-            zodded_version_name = "(" + zodded_version_name + ")"
+            if zodded_version_name != "":
+                zodded_version_name = "(" + zodded_version_name + ")"
+                
 
             if zodded_version_number == "None":
                 zodded_version_number = "Unknown"
@@ -748,7 +750,7 @@ def GetConnectedDrives():
 def GetToolDrives(connected_drives):
     tool_drives = []
     for drive in connected_drives:
-        if constants.DDRTOOLS_DRIVE_NAME_MULTI.upper() == drive[1].upper() or constants.DDRTOOLS_DRIVE_NAME_SINGLE.upper() == drive[1].upper():
+        if drive[1].upper() in [i.upper() for i in constants.DDRTOOLS_DRIVE_NAMES]:
             tool_drives.append(drive)
     return tool_drives
 

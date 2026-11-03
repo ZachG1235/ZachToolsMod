@@ -145,7 +145,7 @@ Product Keys
 (modified as of WO#$($formValues["Work Order"]) ($($currentDate)))
 *****************************
 Quality Care
-This Machine: $($formValues["QC Number"]) - $($formValues["QC Serial"])
+This Machine: $($formValues["QC Number"]) ($($formValues["QC Serial"]))
 Email: $($formValues["Quality Care Email"])
 Trend Micro AV Key: $($formValues["Trend Micro ProdKey"])
 *****************************

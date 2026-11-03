@@ -100,17 +100,17 @@ VERSION_NAMING_SCHEMES = {
             "7" : "Neptune",
     },
     "1": {
-        "NAME": "Blue",
-            "0" : "Water",
+        "NAME": "Blue",  # b words that coincide to fresh, nature, earthy feeling 
+            "0" : "Basin",
             "1" : "Branch",
-            "2" : "Cloud",
-            "3" : "Soil",
-            "4" : "Grass",
-            "5" : "Weather",
-            "6" : "Leaf",
+            "2" : "Bark",
+            "3" : "Bush",
+            "4" : "Beach",
+            "5" : "Boonie",
+            "6" : "Bench",
             "7" : "Breeze",
-            "8" : "Shrub",
-            "9" : "Foliage",
+            "8" : "Birdhouse",
+            "9" : "Ball",
     },
     "2": {}
 }

@@ -494,7 +494,7 @@ def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=T
     drive_label_list.clear()
     for i, each_drive in enumerate(global_drive_info):
         letter = each_drive[0]
-        row = i * 4
+        row = i * 3
 
         if letter not in drive_enablement:
             drive_enablement[letter] = tk.BooleanVar(master=root, value=True)
@@ -556,16 +556,16 @@ def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=T
             else:
                 zodded_version_number = "v" + zodded_version_number
 
-            updated_subtitle = tk.Label(drive_list_frame, text=f"Last Updated: {last_date_updated}", font=("Cascadia Code", 10), fg=days_updated_color, bg=GetColorFromVersionKey(current_blog_version, "LeftPanelBG"))
+            updated_subtitle = tk.Label(drive_list_frame, text=f" Last Updated: {last_date_updated}", font=("Cascadia Code", 10), fg=days_updated_color, bg=GetColorFromVersionKey(current_blog_version, "LeftPanelBG"))
             updated_subtitle.grid(row=row + 1, column=0, padx=10, sticky="w")
             drive_label_list.append(updated_subtitle)
 
-            zodded_subtitle = tk.Label(drive_list_frame, text=f" Last Zodded: {last_date_zodded}", font=("Cascadia Code", 10), fg=days_zodded_color, bg=GetColorFromVersionKey(current_blog_version, "LeftPanelBG"))
-            zodded_subtitle.grid(row=row + 2, column=0, padx=10, sticky="w")
-            drive_label_list.append(zodded_subtitle)
+            # zodded_subtitle = tk.Label(drive_list_frame, text=f" Last Zodded: {last_date_zodded}", font=("Cascadia Code", 10), fg=days_zodded_color, bg=GetColorFromVersionKey(current_blog_version, "LeftPanelBG"))
+            # zodded_subtitle.grid(row=row + 2, column=0, padx=10, sticky="w")
+            # drive_label_list.append(zodded_subtitle)
 
-            zodded_version = tk.Label(drive_list_frame, text=f"     Version: {zodded_version_number} {zodded_version_name}", font=("Cascadia Code", 10), fg=version_color, bg=GetColorFromVersionKey(current_blog_version, "LeftPanelBG"))
-            zodded_version.grid(row=row + 3, column = 0, pady=(0, 10), padx=10, sticky="w")
+            zodded_version = tk.Label(drive_list_frame, text=f"Zools Version: {zodded_version_number} {zodded_version_name}", font=("Cascadia Code", 10), fg=version_color, bg=GetColorFromVersionKey(current_blog_version, "LeftPanelBG"))
+            zodded_version.grid(row=row + 2, column = 0, pady=(0, 10), padx=10, sticky="w")
             drive_label_list.append(zodded_version)
 
             # checkbox = tk.Checkbutton(drive_list_frame, variable=drive_enablement[letter], anchor="center", command=lambda d=letter: CheckButtonModified(d))

@@ -18,7 +18,7 @@ echo Names in drives.txt: %NAMES%
 echo.
 echo Drives detected:
 
-for /f "usebackq tokens=1,2 delims=|" %%A in (`powershell -NoProfile -Command "Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=2 OR DriveType=3' | Where-Object { $_.VolumeName } | ForEach-Object { '{0}|{1}' -f $_.VolumeName, [math]::Round($_.FreeSpace/1GB,2) }"`) do call :check "%%A" "%%B"
+for /f "usebackq tokens=1-3 delims=|" %%A in (`powershell -NoProfile -Command "Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=2 OR DriveType=3' | Where-Object { $_.VolumeName -and $_.DeviceID -ne $env:SystemDrive } | ForEach-Object { '{0}|{1}|{2}' -f $_.VolumeName, [math]::Round($_.FreeSpace/1GB,2), [math]::Round($_.Size/1GB,2) }"`) do call :check "%%A" "%%B" "%%C"
 
 echo.
 echo Done.
@@ -28,7 +28,8 @@ exit /b
 :check
 set "KEY=%~1"
 set "VALUE=%~2"
-echo Checking [%KEY%] - %VALUE% GB free
+set "SIZE=%~3"
+echo Checking [%KEY%] - %VALUE% GB free of %SIZE% GB total
 
 findstr /x /i /l /c:"%KEY%" "%DRIVELIST%" >nul
 if errorlevel 1 (
@@ -37,6 +38,6 @@ if errorlevel 1 (
 )
 
 echo   MATCH - sending
-curl -L "%URL%" -H "Content-Type: application/json" -d "{\"key\":\"%KEY%\",\"value\":\"%VALUE%\"}"
+curl -L "%URL%" -H "Content-Type: application/json" -d "{\"key\":\"%KEY%\",\"value\":\"%VALUE%\",\"size\":\"%SIZE%\"}"
 echo.
 exit /b

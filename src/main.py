@@ -541,14 +541,15 @@ def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=T
             except AttributeError:
                 days_since_zodded = -1
 
-            days_updated_color = GetDaysSinceUpdateColor(days_since_update)
-            days_zodded_color = GetDaysSinceZoddedColor(days_since_zodded)
 
             zodded_version_number = f"{GetVersionNumberFromZoddedDrive(letter)}"
             zodded_version_name = GetVersionNameFromNumber(zodded_version_number)
             if zodded_version_name != "":
                 zodded_version_name = "(" + zodded_version_name + ")"
                 
+            days_updated_color = GetDaysSinceUpdateColor(days_since_update)
+            days_zodded_color = GetDaysSinceZoddedColor(days_since_zodded)
+            version_color = GetVersionNumberColor(zodded_version_number)
 
             if zodded_version_number == "None":
                 zodded_version_number = "Unknown"
@@ -563,8 +564,8 @@ def RefreshDriveList(drive_list_frame, detect_drives=False, run_function_again=T
             zodded_subtitle.grid(row=row + 2, column=0, padx=10, sticky="w")
             drive_label_list.append(zodded_subtitle)
 
-            zodded_version = tk.Label(drive_list_frame, text=f"     Version: {zodded_version_number} {zodded_version_name}", font=("Cascadia Code", 10), fg=days_zodded_color, bg=GetColorFromVersionKey(current_blog_version, "LeftPanelBG"))
-            zodded_version.grid(row=row + 3, column = 0, pady=(0, 20), padx=10, sticky="w")
+            zodded_version = tk.Label(drive_list_frame, text=f"     Version: {zodded_version_number} {zodded_version_name}", font=("Cascadia Code", 10), fg=version_color, bg=GetColorFromVersionKey(current_blog_version, "LeftPanelBG"))
+            zodded_version.grid(row=row + 3, column = 0, pady=(0, 10), padx=10, sticky="w")
             drive_label_list.append(zodded_version)
 
             # checkbox = tk.Checkbutton(drive_list_frame, variable=drive_enablement[letter], anchor="center", command=lambda d=letter: CheckButtonModified(d))
@@ -833,6 +834,14 @@ def GetToolDrives(connected_drives):
 def SetGlobalDrives(drive):
     global global_drive_info
     global_drive_info = drive
+
+def GetVersionNumberColor(version):
+    if version == "None":
+        return "#000000"
+    elif ComparableSemVer(version) < ComparableSemVer(constants.CURRENT_VERSION):
+        return constants.COLOR_DDRTOOLS_DAYS_SINCE_UPDATED_BAD
+    return constants.COLOR_DDRTOOLS_DAYS_SINCE_UPDATED_GOOD
+
 
 def GetOrdinalSuffix(day):
     if day >= 11 and day <= 13:

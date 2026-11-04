@@ -261,9 +261,14 @@ def AddDriveSizeUpdater(drive_letter:str):
 
     # get URL reference from localkeys
     google_url = ""
-    with open(Path.cwd().parent / constants.LOCAL_KEYS_FILENAME, 'r') as local_keys_raw:
-        local_keys_data = json.load(local_keys_raw)
-        google_url = local_keys_data[constants.LOCAL_KEYS_UPDATE_DRIVE_URL_KEY]
+    local_key_path = Path.cwd().parent / constants.LOCAL_KEYS_FILENAME
+    if local_key_path.exists():
+        with open(local_key_path, 'r') as local_keys_raw:
+            local_keys_data = json.load(local_keys_raw)
+            google_url = local_keys_data[constants.LOCAL_KEYS_UPDATE_DRIVE_URL_KEY]
+    else:
+        print("Local Key file is not found, thus ZOOLS_Update-Drive-Sizes.bat will not work. Aborting AddDriveSizeUpdater()...")
+        return 0
 
     # get reference to extras path
     extras_path = Path(drive_letter + ":" + constants.EXTRAS_PATH)

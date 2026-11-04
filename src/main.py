@@ -176,6 +176,7 @@ def AddNoteTemplateScript(drive_letter : str):
             shutil.copy2(source_template_file, notes_template_destination_path)
             print(f"Successfully added Note Template .bat, .ps1, and template files on drive letter {drive_letter}.")
         return 3
+    return 0
 
 def RemoveNoteTemplateScript(drive_letter : str):
     extras_path = Path(drive_letter + ":" + constants.EXTRAS_PATH)
@@ -253,6 +254,74 @@ def RemoveNoteTemplateGUIScript(drive_letter : str):
 
     return total_removing
 
+def AddDriveSizeUpdater(drive_letter:str):
+    if not constants.ADD_UPDATE_DRIVE_SCRIPT:
+        print("Adding drive update script is disabled")
+        return 0
+
+    # get URL reference from localkeys
+    google_url = ""
+    with open(Path.cwd().parent / constants.LOCAL_KEYS_FILENAME, 'r') as local_keys_raw:
+        local_keys_data = json.load(local_keys_raw)
+        google_url = local_keys_data[constants.LOCAL_KEYS_UPDATE_DRIVE_URL_KEY]
+
+    # get reference to extras path
+    extras_path = Path(drive_letter + ":" + constants.EXTRAS_PATH)
+    # prepare txt file destination
+    update_drive_txt_dest_path = Path(drive_letter + ":" + constants.ZOOLS_UPDATE_DRIVE_TXT_DESTINATION_PATH)
+    update_drive_txt_dest_path.mkdir(parents=True, exist_ok=True)
+    # if the extras path exists, copy over
+    if extras_path.is_dir():
+        # move over bat/txt script
+        source_bat_file = os.getcwd() + "\\" + constants.SOURCE_TOOL_PATH + "\\" + constants.ZOOLS_UPDATE_DRIVE_SIZE_SCRIPT_FILENAME
+        source_txt_file = os.getcwd() + "\\" + constants.SOURCE_TOOL_PATH + "\\" + constants.ZOOLS_UPDATE_DRIVE_SIZE_DRIVENAMES_FILENAME
+        if (extras_path / constants.ZOOLS_UPDATE_DRIVE_SIZE_SCRIPT_FILENAME).is_file():
+            shutil.copy2(source_bat_file, extras_path)
+            # after copying bat file, replace the url
+            with open(extras_path / constants.ZOOLS_UPDATE_DRIVE_SIZE_SCRIPT_FILENAME, 'r', encoding="utf-8") as bat_file_raw:
+                bat_file_contents = bat_file_raw.read()
+            modified_bat_file = bat_file_contents.replace("REPLACE-HERE-WITH-URL", google_url)
+            with open(extras_path / constants.ZOOLS_UPDATE_DRIVE_SIZE_SCRIPT_FILENAME, 'w', encoding="utf-8") as bat_file_raw:
+                bat_file_raw.write(modified_bat_file)
+
+            shutil.copy2(source_txt_file, update_drive_txt_dest_path)
+            print(f"Re-copied Update Drive Size .bat and .txt files on drive letter {drive_letter}.")
+        else:
+            shutil.copy2(source_bat_file, extras_path)
+            # after copying bat file, replace the url
+            with open(extras_path / constants.ZOOLS_UPDATE_DRIVE_SIZE_SCRIPT_FILENAME, 'r', encoding="utf-8") as bat_file_raw:
+                bat_file_contents = bat_file_raw.read()
+            modified_bat_file = bat_file_contents.replace("REPLACE-HERE-WITH-URL", google_url)
+            with open(extras_path / constants.ZOOLS_UPDATE_DRIVE_SIZE_SCRIPT_FILENAME, 'w', encoding="utf-8") as bat_file_raw:
+                bat_file_raw.write(modified_bat_file)
+            shutil.copy2(source_txt_file, update_drive_txt_dest_path)
+            print(f"Successfully added Update Drive Size .bat and .txt files on drive letter {drive_letter}.")
+        return 2
+    return 0
+
+def RemoveDriveSizeUpdater(drive_letter : str):
+    extras_path = Path(drive_letter + ":" + constants.EXTRAS_PATH)
+    update_drive_txt_path = Path(drive_letter + ":" + constants.ZOOLS_UPDATE_DRIVE_TXT_DESTINATION_PATH)
+    update_drive_txt_path.mkdir(parents=True, exist_ok=True)
+
+    total_removing = 0
+    # if file exists, remove it
+    bat_file = extras_path / constants.ZOOLS_UPDATE_DRIVE_SIZE_SCRIPT_FILENAME
+    if bat_file.exists():
+        bat_file.unlink()
+        total_removing += 1
+    else:
+        print(f"There was a problem finding Update Drive bat file at {bat_file}")
+
+    txt_file = Path(drive_letter + ":" + constants.ZOOLS_UPDATE_DRIVE_TXT_DESTINATION_PATH) / constants.ZOOLS_UPDATE_DRIVE_SIZE_DRIVENAMES_FILENAME
+    if txt_file.exists():
+        txt_file.unlink()
+        total_removing += 1
+    else:
+        print(f"There was a problem finding Update Drive txt file at {txt_file}")
+
+    return total_removing
+
 def RemoveUpdates(drive):
     operation_start = time.perf_counter()
     total_modifications = 0
@@ -263,6 +332,7 @@ def RemoveUpdates(drive):
     total_modifications += RemoveSerialScript(drive[0])
     total_modifications += RemoveNoteTemplateScript(drive[0])
     total_modifications += RemoveNoteTemplateGUIScript(drive[0])
+    total_modifications += RemoveDriveSizeUpdater(drive[0])
 
     print(f"Operations took {time.perf_counter() - operation_start:.3f} seconds")
     print(f"= Removed {total_modifications} total updates to {drive[1]} on {drive[0]}.")
@@ -278,6 +348,7 @@ def PerformUpdate(drive):
     total_modifications += AddSerialScript(drive[0])
     total_modifications += AddNoteTemplateScript(drive[0])
     total_modifications += AddNoteTemplateGUIScript(drive[0])
+    total_modifications += AddDriveSizeUpdater(drive[0])
 
     print(f"Operations took {time.perf_counter() - operation_start:.3f} seconds")
     print(f"= Made {total_modifications} total modifications to {drive[1]}!!!")
